@@ -31,7 +31,9 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 
 ## Patch Notes: ##
 v0.1: Created basic bot and required networking to interface with Twitch
+
 v0.2: Split bot commands out of the functions module and added rudimentary op permissions
+
 v0.3: Removed sensitive data from repo and released under GPL 3.0
 
 
