@@ -28,7 +28,7 @@ def wa(args):
 
 def calc(args):
     sock = args[0]
-    _chat(sock, "Calculated. Calculated. Calculated. Calculated. _chat disabled for 1 seconds")
+    _chat(sock, "Calculated. Calculated. Calculated. Calculated. Chat disabled for 1 seconds")
 
 
 def dece(args):
@@ -38,7 +38,7 @@ def dece(args):
 
 def discord(args):
     sock = args[0]
-    _chat(sock, "_chat to us on Discord at: www.discord.me/blaskatronic")
+    _chat(sock, "Chat to us on Discord at: www.discord.me/blaskatronic")
 
 
 def roll(args):
@@ -66,12 +66,51 @@ def help(args):
             ', '.join(['!' + command for command in commandsList]) +
             '.')
 
+
+def subscribe(args):
+    sock = args[0]
+    fileName = './Subscribe.txt'
+    with open(fileName, 'r') as subFile:
+        lines = subFile.readlines()
+        lineToDisplay = None
+        while True:
+            lineToDisplay = _R.choice(lines)
+            if lineToDisplay[0] == '#':
+                continue
+            break
+        _chat(sock, lineToDisplay[:-1])
+
+
+def nowplaying(args):
+    sock = args[0]
+    fileName = './NowPlaying.txt'
+    with open(fileName, 'r') as subFile:
+        lines = subFile.readlines()
+        _chat(sock, "We're currently listening to the following song: " + lines[0][:-1])
+
+
+def twitter(args):
+    sock = args[0]
+    if "<YOUR TWITTER USERNAME HERE>" not in str(_cfg.twitterUsername):
+        latestTweetURL = "https://decapi.me/twitter/latest.php?name=" +\
+                        str(_cfg.twitterUsername)
+        tweetHandle = urllib.request.Request(user_url,
+                                headers={"accept": "*/*"})
+        latestTweet = urllib.request.urlopen(tweetHandle).read()
+        _chat(sock, "Latest tweet from " + str(_cfg.twitterUsername) +
+                ": " + latestTweet)
+
+
+
 # TODO !subscribe function: Read a random line from a text file and output it
+#       FUNCTION WRITTEN, NEEDS TESTING
 
 # TODO !nowplaying funcion: Read the line from the NowPlaying.txt
 #       Format: We're currently listening to the following song: XXX
+#       FUNCTION WRITTEN, NEEDS TESTING
 
 # TODO a !twitter function that reads the twitter API and outputs the latest tweet
+#       FUNCTION WRITTEN, NEEDS TESTING
 
 # TODO an !uptime function that reads the twitch API and gives the current uptime
 #       Format: The stream has been live for $UPTIME
