@@ -9,6 +9,7 @@ import cfg as _cfg
 import inspect as _inspec
 import random as _R
 import time as _T
+import urllib.request
 
 
 def time(args):
@@ -94,23 +95,12 @@ def twitter(args):
     if "<YOUR TWITTER USERNAME HERE>" not in str(_cfg.twitterUsername):
         latestTweetURL = "https://decapi.me/twitter/latest.php?name=" +\
                         str(_cfg.twitterUsername)
-        tweetHandle = urllib.request.Request(user_url,
+        tweetHandle = urllib.request.Request(latestTweetURL,
                                 headers={"accept": "*/*"})
-        latestTweet = urllib.request.urlopen(tweetHandle).read()
+        latestTweet = urllib.request.urlopen(tweetHandle).read().decode("utf-8")
         _chat(sock, "Latest tweet from " + str(_cfg.twitterUsername) +
                 ": " + latestTweet)
 
-
-
-# TODO !subscribe function: Read a random line from a text file and output it
-#       FUNCTION WRITTEN, NEEDS TESTING
-
-# TODO !nowplaying funcion: Read the line from the NowPlaying.txt
-#       Format: We're currently listening to the following song: XXX
-#       FUNCTION WRITTEN, NEEDS TESTING
-
-# TODO a !twitter function that reads the twitter API and outputs the latest tweet
-#       FUNCTION WRITTEN, NEEDS TESTING
 
 # TODO an !uptime function that reads the twitch API and gives the current uptime
 #       Format: The stream has been live for $UPTIME
