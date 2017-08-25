@@ -10,6 +10,7 @@ JOIN = os.environ["BOTCHAT"]
 RATE = 1  # Messages per second
 VERB = 5
 
+twitchAPIClientID = os.environ["BOTAPIID"]
 owner = 'Blaskatronic'
 twitterUsername = os.environ["BOTTWIT"]
 opList = []
