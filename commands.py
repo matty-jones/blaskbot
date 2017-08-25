@@ -9,7 +9,7 @@ import cfg as _cfg
 import inspect as _inspec
 import random as _R
 import time as _T
-import urllib.request
+import requests as _requests
 
 
 def time(args):
@@ -44,9 +44,15 @@ def discord(args):
 
 def roll(args):
     sock = args[0]
-    dsides = int(args[2])
-    rollNumber = _R.randint(1, dsides)
-    _chat(sock, "I rolled a D" + str(dsides) + ", and got " + str(rollNumber))
+    try:
+        dsides = int(args[2])
+        rollNumber = _R.randint(1, dsides)
+        _chat(sock, "I rolled a D" + str(dsides) + ", and got " + str(rollNumber))
+    except (IndexError, ValueError) as e:
+        if isinstance(e, IndexError):
+            _chat(sock, "I don't know what to roll! Try specifying a die using something like: !roll 20")
+        elif isinstance(e, ValueError):
+            _chat(sock, "Pfff, it makes no sense to roll that. I'm not doing it.")
 
 
 def schedule(args):
@@ -95,9 +101,8 @@ def twitter(args):
     if "<YOUR TWITTER USERNAME HERE>" not in str(_cfg.twitterUsername):
         latestTweetURL = "https://decapi.me/twitter/latest.php?name=" +\
                         str(_cfg.twitterUsername)
-        tweetHandle = urllib.request.Request(latestTweetURL,
-                                headers={"accept": "*/*"})
-        latestTweet = urllib.request.urlopen(tweetHandle).read().decode("utf-8")
+        tweetHandle = _requests.get(latestTweetURL)
+        latestTweet = tweetHandle.text
         _chat(sock, "Latest tweet from " + str(_cfg.twitterUsername) +
                 ": " + latestTweet)
 
