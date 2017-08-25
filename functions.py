@@ -7,10 +7,12 @@ BEEP BOOP!
 '''
 
 import cfg
-import urllib.request, urllib.error, urllib.parse
-import json
+import requests
 import time as T
 
+
+class URLError(Exception):
+    pass
 
 
 # ---=== HELPER FUNCTIONS ===---
@@ -38,7 +40,7 @@ def chat(sock, msg):
         sock -- The socket over which to send the message
         msg -- (str) The message to send
     '''
-    msg = "/me " + msg
+    msg = "/me : " + msg
     printv("Sending message '" + msg + "' to chat server...", 5)
     sock.send("PRIVMSG #{} :{}\r\n".format(cfg.JOIN, msg).encode('utf-8'))
 
@@ -87,27 +89,27 @@ def threadFillOpList():
     '''
     while True:
         try:
-            user_url = "http://tmi.twitch.tv/group/user/" +\
+            viewerUrl = "http://tmi.twitch.tv/group/user/" +\
                        "blaskatronic/chatters"
-            user_handle = urllib.request.Request(user_url,
-                                    headers={"accept": "*/*"})
-            printv("Reading from url: '" + user_url + "'...", 5)
-            user_response = urllib.request.urlopen(
-                                    user_handle).read()
-            printv("URL read successfully!", 5)
+            printv("Reading from url: '" + viewerUrl + "'...", 5)
+            response = requests.get(viewerUrl, headers={"accept": "*/*"})
             printv("Loading user_data json...", 5)
-            user_data = json.loads(user_response)
+            viewerData = response.json()
+            if "error" in viewerData.keys():
+                raise URLError(response)
             printv("Json loaded!", 5)
             VIPs = ["moderators", "staff", "admins", "global_mods"]
             for VIPType in VIPs:
-                for user in user_data["chatters"][VIPType]:
-                    if user not in cfg.opList:
-                        printv("Adding " + user + " with VIPType " +
+                for viewer in viewerData["chatters"][VIPType]:
+                    if viewer not in cfg.opList:
+                        printv("Adding " + viewer + " with VIPType " +
                                 VIPType + " to opList...", 4)
-                        cfg.opList.append(user)
-        except urllib.error.URLError as e:
-            printv("URLError!", 5)
-            printv("Error Message: " + e, 5)
+                        cfg.opList.append(viewer)
+        except URLError as e:
+            errorDetails = e.args[0]
+            printv("URLError with status " + errorDetails['status'] +
+                   ", '" + errorDetails['error'] + "'!", 5)
+            printv("Error Message: " + errorDetails['message'], 5)
         printv("Current opList = " + repr(cfg.opList), 5)
         printv("Op Loop complete. Sleeping for 5 seconds before resuming",
               5)
