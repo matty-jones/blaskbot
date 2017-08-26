@@ -18,12 +18,16 @@ def main():
     sock.send("NICK {}\r\n".format(cfg.NICK).encode("utf-8"))
     sock.send("JOIN #{}\r\n".format(cfg.JOIN).encode("utf-8"))
 
-
     CHAT_MSG = re.compile(r"^:\w+!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :")
     functions.chat(sock, "Booting up...")
-    functions.chat(sock, "Beep boop Blasky made a python robit")
 
     _thread.start_new_thread(functions.threadFillOpList, ())
+    functions.printv("Loading the points database...", 5)
+    pointsDatabase = functions.loadPointsDatabase()
+    functions.printv("Database loaded!", 5)
+    _thread.start_new_thread(functions.threadUpdateDatabase, ())
+
+    functions.chat(sock, "Beep boop Blasky made a python robit")
 
     while True:
         response = sock.recv(1024).decode("utf-8")
@@ -42,10 +46,6 @@ def main():
                     getattr(commands, command)(arguments)
                 except AttributeError:
                     functions.printv("No function by the name " + command + "!", 4)
-
-
-
-
         # Sleep and then rerun loop
         T.sleep(1)
 
