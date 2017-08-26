@@ -4,16 +4,19 @@ can call upon for execution.
 '''
 
 from functions import chat as _chat
+from functions import request as _request
 import sys as _sys
 import cfg as _cfg
-import inspect as _inspec
 import random as _R
 import time as _T
 import requests as _requests
+from datetime import datetime as _datetime
+import re as _re
 
 
 def time(args):
     sock = args[0]
+    # TODO: Get rid of time and replace it with datetime instead
     _chat(sock, "At Blaskatronic HQ, it is currently " + _T.strftime("%I:%M %p %Z on %A, %B, %d, %Y."))
 
 
@@ -107,5 +110,29 @@ def twitter(args):
                 ": " + latestTweet)
 
 
-# TODO an !uptime function that reads the twitch API and gives the current uptime
-#       Format: The stream has been live for $UPTIME
+def uptime(args):
+    sock = args[0]
+    streamDataURL = "https://api.twitch.tv/kraken/streams/" + _cfg.JOIN
+    streamData = _request(streamDataURL)
+    if not streamData['stream']:
+        _chat(sock, "The stream isn't online, or the Twitch API hasn't" +\
+              " been updated yet!")
+    else:
+        createdTime = _datetime.strptime(streamData['stream']['created_at'],
+                                         "%Y-%m-%dT%H:%M:%SZ")
+        currentTime = _datetime.utcnow()
+        deltaTime = str(currentTime - createdTime)
+        components = _re.match(r"(.*)\:(.*)\:(.*)\.(.*)", deltaTime)
+        componentDict = {'hour': int(components.group(1)),
+                         'minute': int(components.group(2)),
+                         'second': int(components.group(3))}
+        upArray = []
+        for key, value in componentDict.items():
+            if value > 1:
+                upArray.append(str(value) + " " + str(key) + "s")
+            elif value > 0:
+                upArray.append(str(value) + " " + str(key))
+        uptime = ' and '.join(upArray[-2:])
+        if len(upArray) == 3:
+            uptime = upArray[0] + ", " + uptime
+        _chat(sock, "The stream has been live for: " + uptime + "!")
