@@ -9,7 +9,9 @@ BEEP BOOP!
 import cfg
 import requests
 import time as T
+import os
 
+headers = {"Authorization":'OAuth ' + os.environ['BOTAUTH'].split(':')[1]}
 
 class URLError(Exception):
     pass
@@ -121,6 +123,11 @@ def isOp(user):
     Return a user's op status to see if they have op permissions
     '''
     return user in cfg.opList
+
+
+def request(url):
+    req = requests.get(url, headers=headers)
+    return req.json()
 
 
 if __name__ == "__main__":
