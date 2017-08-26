@@ -90,32 +90,57 @@ def threadFillOpList():
     keep it updated
     '''
     while True:
-        try:
-            viewerUrl = "http://tmi.twitch.tv/group/user/" +\
-                       "blaskatronic/chatters"
-            printv("Reading from url: '" + viewerUrl + "'...", 5)
-            response = requests.get(viewerUrl, headers={"accept": "*/*"})
-            printv("Loading user_data json...", 5)
-            viewerData = response.json()
-            if "error" in viewerData.keys():
-                raise URLError(response)
-            printv("Json loaded!", 5)
+        viewerList = getViewerList()
+        if viewerList is not None:
             VIPs = ["moderators", "staff", "admins", "global_mods"]
             for VIPType in VIPs:
-                for viewer in viewerData["chatters"][VIPType]:
+                for viewer in viewerList["chatters"][VIPType]:
                     if viewer not in cfg.opList:
                         printv("Adding " + viewer + " with VIPType " +
                                 VIPType + " to opList...", 4)
                         cfg.opList.append(viewer)
-        except URLError as e:
-            errorDetails = e.args[0]
-            printv("URLError with status " + errorDetails['status'] +
-                   ", '" + errorDetails['error'] + "'!", 5)
-            printv("Error Message: " + errorDetails['message'], 5)
-        printv("Current opList = " + repr(cfg.opList), 5)
-        printv("Op Loop complete. Sleeping for 5 seconds before resuming",
-              5)
         T.sleep(5)
+
+
+def threadUpdateDatabase(pointsDatabase):
+    previousViewers = []
+    while True:
+        viewerList = getViewerList()
+        flattenedViewerList = [viewerName for nameRank in [viewerList['chatters'][x] \
+                                for x in viewerList['chatters'].keys()] for viewerName \
+                                in nameRank]
+        for viewer in flattenedViewerList:
+            if viewer in previousViewers:
+                pointsDatabase[viewer] += cfg.pointsToAward
+        previousViewers = flattenedViewerList[:]
+        savePointsDatabase(pointsDatabase)
+        T.sleep(cfg.awardDeltaT)
+
+
+def savePointsDatabase(pointsDatabase):
+    raise SystemError("SAVE THE DATABASE")
+
+
+def loadPointsDatabase():
+    raise SystemError("LOAD THE DATABASE")
+
+
+def getViewerList():
+    try:
+        viewerURL = "http://tmi.twitch.tv/group/user/" +\
+                   "blaskatronic/chatters"
+        viewerData = request(viewerURL, header={"accept": "*/*"})
+        if "error" in viewerData.keys():
+            raise URLError(response)
+        printv("Json loaded!", 5)
+        return viewerData
+    except URLError as e:
+        errorDetails = e.args[0]
+        printv("URLError with status " + errorDetails['status'] +
+               ", '" + errorDetails['error'] + "'!", 5)
+        printv("Error Message: " + errorDetails['message'], 5)
+        return None
+
 
 
 def isOp(user):
@@ -125,8 +150,10 @@ def isOp(user):
     return user in cfg.opList
 
 
-def request(url):
-    req = requests.get(url, headers=headers)
+def request(URL, header=headers):
+    printv("Reading from URL: '" + URL + "'...", 5)
+    req = requests.get(URL, headers=header)
+    printv("Loading user_data json...", 5)
     return req.json()
 
 
