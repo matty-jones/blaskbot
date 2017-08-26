@@ -136,3 +136,7 @@ def uptime(args):
         if len(upArray) == 3:
             uptime = upArray[0] + ", " + uptime
         _chat(sock, "The stream has been live for: " + uptime + "!")
+
+
+# TODO: Create an op-only command !streamrank that parses all streams for this game and outputs our current rank based on viewers.
+#       Extension: Run this as a thread and keep it updating in the background to keep track of rank over time
