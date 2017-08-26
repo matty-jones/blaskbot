@@ -105,15 +105,25 @@ def threadFillOpList():
 def threadUpdateDatabase(pointsDatabase):
     previousViewers = []
     while True:
-        viewerList = getViewerList()
-        flattenedViewerList = [viewerName for nameRank in [viewerList['chatters'][x] \
-                                for x in viewerList['chatters'].keys()] for viewerName \
-                                in nameRank]
-        for viewer in flattenedViewerList:
-            if viewer in previousViewers:
-                pointsDatabase[viewer] += cfg.pointsToAward
-        previousViewers = flattenedViewerList[:]
-        savePointsDatabase(pointsDatabase)
+        if streamIsUp():
+            printv("Stream is active. Getting viewer list...", 5)
+            viewerList = getViewerList()
+            flattenedViewerList = [viewerName for nameRank in [viewerList['chatters'][x] \
+                                    for x in viewerList['chatters'].keys()] for viewerName \
+                                    in nameRank]
+            printv("Previous Viewers = " + repr(previousViewers), 5)
+            printv("Current Viewers = " + repr(flattenedViewerList), 5)
+            for viewer in flattenedViewerList:
+                if viewer in previousViewers:
+                    printv(viewer + " in both lists. Adding "  + cfg.pointsToAward +\
+                           " points...", 5)
+                    pointsDatabase[viewer] += int(cfg.pointsToAward)
+                    printv(viewer + " now at "  + str(pointsDatabase[viewer]) +\
+                           " points.", 5)
+            previousViewers = flattenedViewerList[:]
+            savePointsDatabase(pointsDatabase)
+        else:
+            printv("Stream not currently up. Not adding points.", 5)
         T.sleep(cfg.awardDeltaT)
 
 
@@ -137,10 +147,9 @@ def getViewerList():
     except URLError as e:
         errorDetails = e.args[0]
         printv("URLError with status " + errorDetails['status'] +
-               ", '" + errorDetails['error'] + "'!", 5)
-        printv("Error Message: " + errorDetails['message'], 5)
+               ", '" + errorDetails['error'] + "'!", 4)
+        printv("Error Message: " + errorDetails['message'], 4)
         return None
-
 
 
 def isOp(user):
@@ -148,6 +157,14 @@ def isOp(user):
     Return a user's op status to see if they have op permissions
     '''
     return user in cfg.opList
+
+
+def streamIsUp():
+    streamDataURL = "https://api.twitch.tv/kraken/streams/" + _cfg.JOIN
+    streamData = request(streamDataURL)
+    if not streamData['stream']:
+        return False
+    return True
 
 
 def request(URL, header=headers):
