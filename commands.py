@@ -50,7 +50,11 @@ def roll(args):
     try:
         dsides = int(args[2])
         rollNumber = _R.randint(1, dsides)
-        _chat(sock, "I rolled a D" + str(dsides) + ", and got " + str(rollNumber))
+        rollString = "I rolled a D" + str(dsides)
+        if dsides > 20:
+            rollString += " (it was a REALLY big one)"
+        rollString += ", and got " + str(rollNumber) + "."
+        _chat(sock, rollString)
     except (IndexError, ValueError) as e:
         if isinstance(e, IndexError):
             _chat(sock, "I don't know what to roll! Try specifying a die using something like: !roll 20")
