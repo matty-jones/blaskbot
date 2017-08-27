@@ -12,8 +12,12 @@ import time as T
 import os
 from tinydb import TinyDB, Query
 from tinydb.operations import add
+from multiprocessing import Value
 
 headers = {"Authorization":'OAuth ' + os.environ['BOTAUTH'].split(':')[1]}
+# This is a global variable, but needs to be shared between timer subprocesses
+# (read only, not modify) so use mp.Value()
+numberOfChatMessages = Value('d', 0)
 
 class URLError(Exception):
     pass
@@ -187,6 +191,33 @@ def request(URL, header=headers):
     req = requests.get(URL, headers=header)
     printv("Loading user_data json...", 5)
     return req.json()
+
+
+def incrementNumberOfChatMessages():
+    global numberOfChatMessages
+    with numberOfChatMessages.get_lock():
+        numberOfChatMessages.value += 1
+    print(numberOfChatMessages.value)
+
+
+def timer(command, delay, arguments):
+    previousNumberOfChatMessages = 0
+    try:
+        exec("from commands import " + str(command))
+        while True:
+            # All timers must wait until 1 minute after 1 chat message
+            # has been sent before executing the command again.
+            if numberOfChatMessages.value > previousNumberOfChatMessages:
+                exec(str(command) + "(arguments)")
+                previousNumberOfChatMessages = int(numberOfChatMessages.value)
+                T.sleep(delay)
+            else:
+                printv("Not enough messages sent to run again (" + \
+                       str(numberOfChatMessages.value) + " <= " + \
+                       str(previousNumberOfChatMessages) + "). Sleeping.", 5)
+                T.sleep(60)
+    except (AttributeError, ImportError):
+        printv("No function by the name " + command + "!", 4)
 
 
 if __name__ == "__main__":
