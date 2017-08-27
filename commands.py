@@ -5,13 +5,16 @@ can call upon for execution.
 
 from functions import chat as _chat
 from functions import request as _request
+from functions import getXMLAttributes as _getXMLAttributes
 import sys as _sys
+import os as _os
 import cfg as _cfg
 import random as _R
 import time as _T
 import requests as _requests
 from datetime import datetime as _datetime
 import re as _re
+from html import unescape as _uesc
 
 
 def time(args):
@@ -97,10 +100,15 @@ def subscribe(args):
 
 def nowplaying(args):
     sock = args[0]
-    fileName = './NowPlaying.txt'
-    with open(fileName, 'r') as subFile:
-        lines = subFile.readlines()
-        _chat(sock, "We're currently listening to the following song: " + lines[0][:-1])
+    VLCLUAURL = "http://127.0.0.1:8080/requests/status.xml"
+    try:
+        nowPlayingData = _requests.get(VLCLUAURL, auth=('',_os.environ['VLCLUAPASS']))
+        VLCDict = _getXMLAttributes(nowPlayingData.content)
+        nowPlayingLine = _uesc(VLCDict['information']['meta']['title']) + " by " +\
+                _uesc(VLCDict['information']['meta']['artist'])
+        _chat(sock, "We're currently listening to the following song: " + nowPlayingLine)
+    except _requests.exceptions.ConnectionError:
+        _chat(sock, "I can't read the now playing data right now! Sorry!")
 
 
 def twitter(args):
