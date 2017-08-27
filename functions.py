@@ -10,6 +10,8 @@ import cfg
 import requests
 import time as T
 import os
+from tinydb import TinyDB, Query
+from tinydb.operations import add
 
 headers = {"Authorization":'OAuth ' + os.environ['BOTAUTH'].split(':')[1]}
 
@@ -102,44 +104,57 @@ def threadFillOpList():
         T.sleep(5)
 
 
-def threadUpdateDatabase(pointsDatabase):
+def threadUpdateDatabase():
+    printv("Loading the points database...", 5)
+    pointsDatabase = loadPointsDatabase()
+    printv("Database loaded!", 5)
     previousViewers = []
     while True:
         if streamIsUp():
-            printv("Stream is active. Getting viewer list...", 5)
+            printv("Stream is active. Getting viewer list...", 4)
             viewerList = getViewerList()
+            printv("viewerList = " + repr(viewerList), 4)
             flattenedViewerList = [viewerName for nameRank in [viewerList['chatters'][x] \
                                     for x in viewerList['chatters'].keys()] for viewerName \
                                     in nameRank]
-            printv("Previous Viewers = " + repr(previousViewers), 5)
-            printv("Current Viewers = " + repr(flattenedViewerList), 5)
+            printv("Previous Viewers = " + repr(previousViewers), 4)
+            printv("Current Viewers = " + repr(flattenedViewerList), 4)
             for viewer in flattenedViewerList:
                 if viewer in previousViewers:
-                    printv(viewer + " in both lists. Adding "  + cfg.pointsToAward +\
+                    printv(viewer + " in both lists. Adding "  + str(cfg.pointsToAward) +\
                            " points...", 5)
-                    pointsDatabase[viewer] += int(cfg.pointsToAward)
-                    printv(viewer + " now at "  + str(pointsDatabase[viewer]) +\
-                           " points.", 5)
+                    printv("Checking if " + viewer + " is in database...", 4)
+                    # Check if viewer is already in the database
+                    if len(pointsDatabase.search(Query().name == viewer)) == 0:
+                        printv("Adding " + viewer + " to database...", 4)
+                        pointsDatabase.insert({'name': viewer, 'points': 0})
+                    printv(viewer + " has " + str(pointsDatabase.search(Query().name ==\
+                            viewer)[0]['points']) + " points.", 5)
+                    printv("Incrementing " + viewer + "'s points...", 4)
+                    pointsDatabase.update(add('points', cfg.pointsToAward), \
+                                          Query().name == viewer)
+                    printv(viewer + " now has " + str(pointsDatabase.search(Query().name ==\
+                            viewer)[0]['points']) + " points.", 5)
             previousViewers = flattenedViewerList[:]
-            savePointsDatabase(pointsDatabase)
         else:
-            printv("Stream not currently up. Not adding points.", 5)
+            printv("Stream not currently up. Not adding points.", 4)
+        printv("Database now looks like this: " + repr(pointsDatabase.all()), 4)
         T.sleep(cfg.awardDeltaT)
 
 
-def savePointsDatabase(pointsDatabase):
-    raise SystemError("SAVE THE DATABASE")
-
-
 def loadPointsDatabase():
-    raise SystemError("LOAD THE DATABASE")
+    pointsDB = TinyDB('./pointsDatabases/' + cfg.JOIN + 'Points.db')
+    print(pointsDB.search(Query().viewer == 'Blaskatronic'))
+    return pointsDB
 
 
 def getViewerList():
     try:
         viewerURL = "http://tmi.twitch.tv/group/user/" +\
-                   "blaskatronic/chatters"
-        viewerData = request(viewerURL, header={"accept": "*/*"})
+                   cfg.JOIN + "/chatters"
+        viewerData = request(viewerURL, header={"User-Agent": \
+            "Mozilla/5.0 (X11;Ubuntu;Linux x86_64;rv:55.0) Gecko/20100101 Firefox/55.0",
+            "Cache-Control": "max-age=0", "Connection": "keep-alive"})
         if "error" in viewerData.keys():
             raise URLError(response)
         printv("Json loaded!", 5)
@@ -160,7 +175,7 @@ def isOp(user):
 
 
 def streamIsUp():
-    streamDataURL = "https://api.twitch.tv/kraken/streams/" + _cfg.JOIN
+    streamDataURL = "https://api.twitch.tv/kraken/streams/" + cfg.JOIN
     streamData = request(streamDataURL)
     if not streamData['stream']:
         return False
