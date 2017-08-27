@@ -7,7 +7,7 @@ import commands
 import socket
 import re
 import time as T
-import _thread
+from multiprocessing import Process
 
 
 def main():
@@ -21,8 +21,14 @@ def main():
     CHAT_MSG = re.compile(r"^:\w+!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :")
     functions.chat(sock, "Booting up...")
 
-    _thread.start_new_thread(functions.threadFillOpList, ())
-    _thread.start_new_thread(functions.threadUpdateDatabase, ())
+    fillOpList = Process(target=functions.threadFillOpList)
+    updateDatabase = Process(target=functions.threadUpdateDatabase)
+    subscribeTimer = Process(target=functions.timer, \
+                             args=('subscribe', 1800, [sock, 'blaskatronic']))
+
+    fillOpList.start()
+    updateDatabase.start()
+    subscribeTimer.start()
 
     functions.chat(sock, "Beep boop Blasky made a python robit")
 
@@ -43,6 +49,10 @@ def main():
                     getattr(commands, command)(arguments)
                 except AttributeError:
                     functions.printv("No function by the name " + command + "!", 4)
+            else:
+                # Increment the number of sent messages
+                if username.lower() != 'blaskbot':
+                    functions.incrementNumberOfChatMessages()
         # Sleep and then rerun loop
         T.sleep(1)
 
