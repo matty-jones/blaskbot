@@ -13,6 +13,7 @@ import os
 from tinydb import TinyDB, Query
 from tinydb.operations import add
 from multiprocessing import Value
+import xml.etree.ElementTree as ET
 
 headers = {"Authorization":'OAuth ' + os.environ['BOTAUTH'].split(':')[1]}
 # This is a global variable, but needs to be shared between timer subprocesses
@@ -205,7 +206,7 @@ def timer(command, delay, arguments):
     try:
         exec("from commands import " + str(command))
         while True:
-            # All timers must wait until 1 minute after 1 chat message
+            # All timers must wait until 5 minutes after 1 chat message
             # has been sent before executing the command again.
             if numberOfChatMessages.value > previousNumberOfChatMessages:
                 exec(str(command) + "(arguments)")
@@ -215,9 +216,27 @@ def timer(command, delay, arguments):
                 printv("Not enough messages sent to run again (" + \
                        str(numberOfChatMessages.value) + " <= " + \
                        str(previousNumberOfChatMessages) + "). Sleeping.", 5)
-                T.sleep(60)
+                T.sleep(300)
     except (AttributeError, ImportError):
         printv("No function by the name " + command + "!", 4)
+
+
+def getXMLAttributes(xmlData):
+    attributeDict = {}
+    elementTree = ET.fromstring(xmlData)
+    for element in elementTree:
+        if len(element) == 0:
+            attributeDict[element.tag] = element.text
+        else:
+            attributeDict[element.tag] = {}
+            for subelement in element:
+                if subelement.tag == "category":
+                    subattribute = attributeDict[element.tag][subelement.get("name")] = {}
+                    for subsubelement in subelement:
+                        subattribute[subsubelement.get("name")] = subsubelement.text
+                else:
+                    attributeDict[element.tag][subelement.tag] = subelement.text
+    return attributeDict
 
 
 if __name__ == "__main__":
