@@ -22,9 +22,6 @@ def main():
     functions.chat(sock, "Booting up...")
 
     _thread.start_new_thread(functions.threadFillOpList, ())
-    functions.printv("Loading the points database...", 5)
-    pointsDatabase = functions.loadPointsDatabase()
-    functions.printv("Database loaded!", 5)
     _thread.start_new_thread(functions.threadUpdateDatabase, ())
 
     functions.chat(sock, "Beep boop Blasky made a python robit")
