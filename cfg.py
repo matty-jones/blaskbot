@@ -21,3 +21,8 @@ opOnlyCommands = ['subscribe']
 # Viewer Points Database
 pointsToAward = 1
 awardDeltaT = 60
+currencyName = "BlasKoin"
+ranks = {1: 'Rank 1',
+         2: 'Rank 2',
+         3: 'Rank 3',
+         4: 'Man this Gin and Tonic is tasty'}
