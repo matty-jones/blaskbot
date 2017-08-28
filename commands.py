@@ -6,6 +6,7 @@ can call upon for execution.
 from functions import chat as _chat
 from functions import request as _request
 from functions import getXMLAttributes as _getXMLAttributes
+from functions import loadPointsDatabase as _getPointsDB
 import sys as _sys
 import os as _os
 import cfg as _cfg
@@ -15,6 +16,7 @@ import requests as _requests
 from datetime import datetime as _datetime
 import re as _re
 from html import unescape as _uesc
+from tinydb import Query
 
 
 def time(args):
@@ -148,6 +150,49 @@ def uptime(args):
         if len(upArray) == 3:
             uptime = upArray[0] + ", " + uptime
         _chat(sock, "The stream has been live for: " + uptime + "!")
+
+
+def blaskoins(args):
+    sock = args[0]
+    userName = args[1]
+    pointsDB = _getPointsDB()
+    try:
+        currentPoints = pointsDB.search(Query().name == userName)[0]['points']
+        currencyUnits = _cfg.currencyName
+        if currentPoints > 1:
+            currencyUnits += "s"
+        currentRank = pointsDB.search(Query().name == userName)[0]['rank']
+        currentMultiplier = pointsDB.search(Query().name == userName)[0]['multiplier']
+        nextRank = None
+        pointsForNextRank = None
+        for rankPoints in _cfg.ranks.keys():
+            nextRank = _cfg.ranks[rankPoints]
+            pointsForNextRank = rankPoints
+            if currentPoints < rankPoints:
+                break
+        secondsToNextRank = (pointsForNextRank - currentPoints) * int(_cfg.awardDeltaT /\
+                                (_cfg.pointsToAward * currentMultiplier))
+        mins, secs = divmod(secondsToNextRank, 60)
+        hours, mins = divmod(mins, 60)
+        timeDict = {'hour': int(hours), 'minute': int(mins), 'second': int(secs)}
+        timeArray = []
+        for key, value in timeDict.items():
+            if value > 1:
+                timeArray.append(str(value) + " " + str(key) + "s")
+            elif value > 0:
+                timeArray.append(str(value) + " " + str(key))
+        timeToNext = ' and '.join(timeArray[-2:])
+        if len(timeArray) == 3:
+            timeToNext = timeToNext[0] + ", " + timeToNext
+        outputLine = userName + " currently has " + str(currentPoints) + " " +\
+                str(currencyUnits) + " and is a " +\
+                str(currentRank) + " (" + timeToNext + " until next rank!)"
+        _chat(sock, outputLine)
+    except IndexError:
+        _chat(sock, "I'm sorry, " + userName + ", but I don't have any " + _cfg.currencyName +\
+              " data for you yet! Please try again later (and also welcome to the stream ;)).")
+
+
 
 
 # TODO: Create an op-only command !streamrank that parses all streams for this game and outputs our current rank based on viewers.

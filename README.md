@@ -1,6 +1,8 @@
 # BlaskBot v0.3 #
 
+
 The nascent stages of a custom-built fully-fledged Twitch bot.
+
 
 ## Current features: ##
 * Connection to twitch IRC given an account name and OAuth
@@ -8,8 +10,10 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 * The ability to read commands from the chat and execute functions based on the user's request
 * A rudimentary permissions engine that restricts certain commands from being executed by non-mods
 
+
 ## Current commands: ##
 * !bb: BEEP BOOP
+* !blaskoins: Outputs your current blaskoins and rank information
 * !calc: CALCULATED
 * !dece: DECE
 * !discord: Outputs discord link
@@ -22,6 +26,7 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 * !uptime: Outputs the uptime of the current stream
 * !wa: WEIGH ANCHOR!!!
 
+
 ## To do: ##
 * !nowplaying: Read and output the currently playing song data (can be from file, or directly from VLC)
 * Notify on host, follow, sub
@@ -30,7 +35,6 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 * !slot minigame with a jackpot where people can win steam keys located in a database
 * Some way of interfacing with clips.twitch.tv to generate and output random clips
 * !streamrank command that parses all streams for the current game and outputs the current rank based on viewers (maybe run this as a thread so that it keeps updating in the background for stats)
-
 
 
 ## Patch Notes: ##
