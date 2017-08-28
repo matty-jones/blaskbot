@@ -22,7 +22,7 @@ def main():
     functions.chat(sock, "Booting up...")
 
     fillOpList = Process(target=functions.threadFillOpList)
-    updateDatabase = Process(target=functions.threadUpdateDatabase)
+    updateDatabase = Process(target=functions.threadUpdateDatabase, args=([sock]))
     subscribeTimer = Process(target=functions.timer, \
                              args=('subscribe', 1800, [sock, 'blaskatronic']))
 
@@ -47,7 +47,8 @@ def main():
                 arguments = [sock, username] + fullMessage[1:]
                 try:
                     getattr(commands, command)(arguments)
-                except AttributeError:
+                except AttributeError as e:
+                    functions.printv(e, 4)
                     functions.printv("No function by the name " + command + "!", 4)
             else:
                 # Increment the number of sent messages
