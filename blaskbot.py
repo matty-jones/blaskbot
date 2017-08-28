@@ -39,6 +39,7 @@ def main():
         else:
             username = re.search(r"\w+", response).group(0)
             message = CHAT_MSG.sub("", response)
+            functions.printv(username + ": " + message, 1)
             if message.strip()[0] == "!":
                 # A command has been issued
                 fullMessage = message.strip().split(' ')
