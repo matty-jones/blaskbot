@@ -11,7 +11,7 @@ import requests
 import time as T
 import os
 from tinydb import TinyDB, Query
-from tinydb.operations import add
+import tinydb.operations as tdbo
 from multiprocessing import Value
 import xml.etree.ElementTree as ET
 
@@ -109,7 +109,7 @@ def threadFillOpList():
         T.sleep(5)
 
 
-def threadUpdateDatabase():
+def threadUpdateDatabase(sock):
     printv("Loading the points database...", 5)
     pointsDatabase = loadPointsDatabase()
     printv("Database loaded!", 5)
@@ -132,12 +132,30 @@ def threadUpdateDatabase():
                     # Check if viewer is already in the database
                     if len(pointsDatabase.search(Query().name == viewer)) == 0:
                         printv("Adding " + viewer + " to database...", 4)
-                        pointsDatabase.insert({'name': viewer, 'points': 0})
+                        pointsDatabase.insert({'name': viewer, 'points': 0, 'rank': 'None',
+                                               'multiplier': 1})
                     printv(viewer + " has " + str(pointsDatabase.search(Query().name ==\
                             viewer)[0]['points']) + " points.", 5)
                     printv("Incrementing " + viewer + "'s points...", 4)
-                    pointsDatabase.update(add('points', cfg.pointsToAward), \
+                    pointsDatabase.update(tdbo.add('points', cfg.pointsToAward), \
                                           Query().name == viewer)
+                    printv("Calculating " + viewer + "'s rank...", 5)
+                    currentPoints = pointsDatabase.search(Query().name == viewer)[0]['points']
+                    oldRank = pointsDatabase.search(Query().name == viewer)[0]['rank']
+                    newRank = None
+                    for rankPoints in sorted(cfg.ranks.keys()):
+                        if int(currentPoints) < int(rankPoints):
+                            break
+                        newRank = cfg.ranks[rankPoints]
+                    print(currentPoints, oldRank, newRank)
+                    if newRank != oldRank:
+                        pointsDatabase.update(tdbo.set('rank', newRank), Query().name == viewer)
+                        currencyUnits = cfg.currencyName
+                        if currentPoints > 1:
+                            currencyUnits += "s"
+                        chat(sock, "Congratulations " + viewer + ", you have been promoted" +\
+                             " to the rank of " + newRank + "! You now have " +\
+                             str(currentPoints) + " " + currencyUnits + " to spend!")
                     printv(viewer + " now has " + str(pointsDatabase.search(Query().name ==\
                             viewer)[0]['points']) + " points.", 5)
             previousViewers = flattenedViewerList[:]
@@ -149,7 +167,6 @@ def threadUpdateDatabase():
 
 def loadPointsDatabase():
     pointsDB = TinyDB('./pointsDatabases/' + cfg.JOIN + 'Points.db')
-    print(pointsDB.search(Query().viewer == 'Blaskatronic'))
     return pointsDB
 
 
