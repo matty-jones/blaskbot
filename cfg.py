@@ -9,7 +9,7 @@ NICK = os.environ["BOTNICK"]
 PASS = os.environ["BOTAUTH"]
 JOIN = os.environ["BOTCHATTEST"]
 RATE = 1  # Messages per second
-VERB = 5
+VERB = 4
 
 # Function interface variables
 twitchAPIClientID = os.environ["BOTAPIID"]
@@ -22,7 +22,24 @@ opOnlyCommands = ['subscribe']
 pointsToAward = 1
 awardDeltaT = 60
 currencyName = "BlasKoin"
-ranks = {1: 'Rank 1',
-         2: 'Rank 2',
-         3: 'Rank 3',
-         4: 'Man this Gin and Tonic is tasty'}
+ranks = {10: 'Probe',
+         50: 'Zealot',
+         100: 'Adept',
+         150: 'Sentry',
+         200: 'Stalker',
+         300: 'Warp Prism',
+         400: 'Immortal',
+         500: 'Phoenix',
+         600: 'Oracle',
+         700: 'Disruptor',
+         800: 'Void Ray',
+         900: 'Colossus',
+         1000: 'Tempest',
+         1100: 'High Templar',
+         1200: 'Dark Templar',
+         1300: 'Archon',
+         1400: 'Dark Archon',
+         1500: 'Carrier',
+         2000: 'Mothership',
+         2500: 'MissingNo.',
+         3000: 'NaN'}
