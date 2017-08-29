@@ -10,6 +10,7 @@ import cfg
 import requests
 import time as T
 import os
+import sys
 from tinydb import TinyDB, Query
 import tinydb.operations as tdbo
 from multiprocessing import Value
@@ -113,52 +114,57 @@ def threadUpdateDatabase(sock):
     printv("Loading the points database...", 5)
     pointsDatabase = loadPointsDatabase()
     printv("Database loaded!", 5)
+    skipViewers = ['blaskatronic', 'blaskbot', 'doryx', 'fsmimp']
     previousViewers = []
     while True:
         if streamIsUp():
             printv("Stream is active. Getting viewer list...", 4)
             viewerList = getViewerList()
-            printv("viewerList = " + repr(viewerList), 4)
-            flattenedViewerList = [viewerName for nameRank in [viewerList['chatters'][x] \
-                                    for x in viewerList['chatters'].keys()] for viewerName \
-                                    in nameRank]
-            printv("Previous Viewers = " + repr(previousViewers), 4)
-            printv("Current Viewers = " + repr(flattenedViewerList), 4)
-            for viewer in flattenedViewerList:
-                if viewer in previousViewers:
-                    printv(viewer + " in both lists. Adding "  + str(cfg.pointsToAward) +\
-                           " points...", 5)
-                    printv("Checking if " + viewer + " is in database...", 4)
-                    # Check if viewer is already in the database
-                    if len(pointsDatabase.search(Query().name == viewer)) == 0:
-                        printv("Adding " + viewer + " to database...", 4)
-                        pointsDatabase.insert({'name': viewer, 'points': 0, 'rank': 'None',
-                                               'multiplier': 1})
-                    printv(viewer + " has " + str(pointsDatabase.search(Query().name ==\
-                            viewer)[0]['points']) + " points.", 5)
-                    printv("Incrementing " + viewer + "'s points...", 4)
-                    pointsDatabase.update(tdbo.add('points', cfg.pointsToAward), \
-                                          Query().name == viewer)
-                    printv("Calculating " + viewer + "'s rank...", 5)
-                    currentPoints = pointsDatabase.search(Query().name == viewer)[0]['points']
-                    oldRank = pointsDatabase.search(Query().name == viewer)[0]['rank']
-                    newRank = None
-                    for rankPoints in sorted(cfg.ranks.keys()):
-                        if int(currentPoints) < int(rankPoints):
-                            break
-                        newRank = cfg.ranks[rankPoints]
-                    print(currentPoints, oldRank, newRank)
-                    if newRank != oldRank:
-                        pointsDatabase.update(tdbo.set('rank', newRank), Query().name == viewer)
-                        currencyUnits = cfg.currencyName
-                        if currentPoints > 1:
-                            currencyUnits += "s"
-                        chat(sock, "Congratulations " + viewer + ", you have been promoted" +\
-                             " to the rank of " + newRank + "! You now have " +\
-                             str(currentPoints) + " " + currencyUnits + " to spend!")
-                    printv(viewer + " now has " + str(pointsDatabase.search(Query().name ==\
-                            viewer)[0]['points']) + " points.", 5)
-            previousViewers = flattenedViewerList[:]
+            if viewerList is not None:
+                printv("viewerList = " + repr(viewerList), 4)
+                flattenedViewerList = [viewerName for nameRank in [viewerList['chatters'][x] \
+                                        for x in viewerList['chatters'].keys()] for viewerName \
+                                        in nameRank]
+                printv("Previous Viewers = " + repr(previousViewers), 4)
+                printv("Current Viewers = " + repr(flattenedViewerList), 4)
+                for viewer in flattenedViewerList:
+                    if viewer in previousViewers:
+                        printv(viewer + " in both lists. Adding "  + str(cfg.pointsToAward) +\
+                               " points...", 5)
+                        printv("Checking if " + viewer + " is in database...", 4)
+                        # Check if viewer is already in the database
+                        if len(pointsDatabase.search(Query().name == viewer)) == 0:
+                            printv("Adding " + viewer + " to database...", 4)
+                            pointsDatabase.insert({'name': viewer, 'points': 0, 'rank': 'None',
+                                                   'multiplier': 1})
+                        printv(viewer + " has " + str(pointsDatabase.search(Query().name ==\
+                                viewer)[0]['points']) + " points.", 5)
+                        printv("Incrementing " + viewer + "'s points...", 4)
+                        pointsDatabase.update(tdbo.add('points', cfg.pointsToAward), \
+                                              Query().name == viewer)
+                        # Skip calculating the ranks for anyone in skipViewers
+                        if viewer in skipViewers:
+                            continue
+                        printv("Calculating " + viewer + "'s rank...", 5)
+                        currentPoints = pointsDatabase.search(Query().name == viewer)[0]['points']
+                        oldRank = pointsDatabase.search(Query().name == viewer)[0]['rank']
+                        newRank = None
+                        for rankPoints in sorted(cfg.ranks.keys()):
+                            if int(currentPoints) < int(rankPoints):
+                                break
+                            newRank = cfg.ranks[rankPoints]
+                        print(currentPoints, oldRank, newRank)
+                        if newRank != oldRank:
+                            pointsDatabase.update(tdbo.set('rank', newRank), Query().name == viewer)
+                            currencyUnits = cfg.currencyName
+                            if currentPoints > 1:
+                                currencyUnits += "s"
+                            chat(sock, "Congratulations " + viewer + ", you have been promoted" +\
+                                 " to the rank of " + newRank + "! You now have " +\
+                                 str(currentPoints) + " " + currencyUnits + " to spend!")
+                        printv(viewer + " now has " + str(pointsDatabase.search(Query().name ==\
+                                viewer)[0]['points']) + " points.", 5)
+                previousViewers = flattenedViewerList[:]
         else:
             printv("Stream not currently up. Not adding points.", 4)
         printv("Database now looks like this: " + repr(pointsDatabase.all()), 4)
@@ -166,7 +172,7 @@ def threadUpdateDatabase(sock):
 
 
 def loadPointsDatabase():
-    pointsDB = TinyDB('./pointsDatabases/' + cfg.JOIN + 'Points.db')
+    pointsDB = TinyDB('./databases/' + cfg.JOIN + 'Points.db')
     return pointsDB
 
 
@@ -175,7 +181,7 @@ def getViewerList():
         viewerURL = "http://tmi.twitch.tv/group/user/" +\
                    cfg.JOIN + "/chatters"
         viewerData = request(viewerURL, header={"User-Agent": \
-            "Mozilla/5.0 (X11;Ubuntu;Linux x86_64;rv:55.0) Gecko/20100101 Firefox/55.0",
+            "Mozilla/5.0 (X11;Ubuntu;Linux x86_64;rv:55.0) Gecko/20100101 Firefox/55.0",\
             "Cache-Control": "max-age=0", "Connection": "keep-alive"})
         if "error" in viewerData.keys():
             raise URLError(response)
@@ -186,6 +192,9 @@ def getViewerList():
         printv("URLError with status " + errorDetails['status'] +
                ", '" + errorDetails['error'] + "'!", 4)
         printv("Error Message: " + errorDetails['message'], 4)
+        return None
+    except:
+        printv("Unexpected Error: " + sys.exc_info()[0], 2)
         return None
 
 
@@ -215,7 +224,6 @@ def incrementNumberOfChatMessages():
     global numberOfChatMessages
     with numberOfChatMessages.get_lock():
         numberOfChatMessages.value += 1
-    print(numberOfChatMessages.value)
 
 
 def timer(command, delay, arguments):
