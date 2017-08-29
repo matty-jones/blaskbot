@@ -176,6 +176,11 @@ def loadPointsDatabase():
     return pointsDB
 
 
+def loadClipsDatabase():
+    clipsDB = TinyDB('./databases/' + cfg.JOIN + 'Clips.db')
+    return clipsDB
+
+
 def getViewerList():
     try:
         viewerURL = "http://tmi.twitch.tv/group/user/" +\

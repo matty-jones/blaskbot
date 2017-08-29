@@ -7,6 +7,9 @@ from functions import chat as _chat
 from functions import request as _request
 from functions import getXMLAttributes as _getXMLAttributes
 from functions import loadPointsDatabase as _getPointsDB
+from functions import loadClipsDatabase as _getClipsDB
+from functions import isOp as _isOp
+from functions import printv as _printv
 import sys as _sys
 import os as _os
 import cfg as _cfg
@@ -16,7 +19,7 @@ import requests as _requests
 from datetime import datetime as _datetime
 import re as _re
 from html import unescape as _uesc
-from tinydb import Query
+from tinydb import Query as _Query
 
 
 def time(args):
@@ -192,6 +195,55 @@ def blaskoins(args):
         _chat(sock, "I'm sorry, " + userName + ", but I don't have any " + _cfg.currencyName +\
               " data for you yet! Please try again later (and also welcome to the stream ;)).")
 
+
+def clip(args):
+    sock = args[0]
+    additionalArgs = args[1:]
+    userName = additionalArgs[0]
+    clipDB = _getClipsDB()
+    if len(additionalArgs) == 1:
+        # Just return a random clip (indexed from 1)
+        clipNo = int(_R.randrange(len(clipDB))) + 1
+        url = "https://clips.twitch.tv/" + clipDB.get(eid=clipNo)['url']
+        author = clipDB.get(eid=clipNo)['author']
+        _printv("Clip request: " + url, 4)
+        _chat(sock, "Check out this awesome clip (#" + str(clipNo - 1) + "): " + url)
+    elif additionalArgs[1] == 'add':
+        if userName is _isOp():
+            try:
+                url = additionalArgs[2]
+                author = additionalArgs[3]
+                if len(author) > len(url):
+                    raise IndexError
+            except IndexError:
+                _chat(sock, "The correct syntax is !clip add <CLIP SLUG> <AUTHOR>.")
+            else:
+                clipsDB.insert({'url': url, 'author': author})
+        else:
+            _chat(sock, "A moderator will take a look at your clip and " +\
+                  "add it to my database if they like it!")
+    elif len(additionalArgs) == 2:
+        try:
+            clipNo = int(additionalArgs[1]) + 1
+            if (clipNo > 0) and (clipNo <= len(clipDB)):
+                url = "https://clips.twitch.tv/" + clipDB.get(eid=clipNo)['url']
+                _printv("Clip request: " + url, 4)
+                _chat(sock, "Here is clip #" + str(clipNo - 1) + ": " + url)
+            else:
+                _chat(sock, "Valid clip #s are 0 to " + str(len(clipDB) - 1) + " inclusive.")
+        except ValueError:
+            clipFromUser = str(additionalArgs[1])
+            userClips = clipDB.search(_Query().author == clipFromUser)
+            if len(userClips) > 0:
+                clipToShow = _R.choice(userClips)
+                url = "https://clips.twitch.tv/" + clipToShow['url']
+                _printv("Clip request: " + url, 4)
+                _chat(sock, "Check out " + clipFromUser + "'s awesome clip (#" +\
+                      str(clipToShow.eid - 1) + "): " + url)
+            else:
+                _chat(sock, "Sorry, there are no clips from " + clipFromUser + " yet.")
+    else:
+        _chat(sock, "The correct syntax is !clip, !clip #, or !clip <NAME>.")
 
 
 
