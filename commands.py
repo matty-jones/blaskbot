@@ -160,12 +160,12 @@ def blaskoins(args):
     userName = args[1]
     pointsDB = _getPointsDB()
     try:
-        currentPoints = pointsDB.search(Query().name == userName)[0]['points']
+        currentPoints = pointsDB.search(_Query().name == userName)[0]['points']
         currencyUnits = _cfg.currencyName
         if currentPoints > 1:
             currencyUnits += "s"
-        currentRank = pointsDB.search(Query().name == userName)[0]['rank']
-        currentMultiplier = pointsDB.search(Query().name == userName)[0]['multiplier']
+        currentRank = pointsDB.search(_Query().name == userName)[0]['rank']
+        currentMultiplier = pointsDB.search(_Query().name == userName)[0]['multiplier']
         nextRank = None
         pointsForNextRank = None
         for rankPoints in _cfg.ranks.keys():
