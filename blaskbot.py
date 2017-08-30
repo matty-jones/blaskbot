@@ -1,6 +1,22 @@
 '''BlaskBot's Main Loop'''
 
-import cfg
+try:
+    import cfg
+except TypeError:
+    # Environment Variables not set
+    print("NOTE: The required environment variables in cfg.py have not been set.")
+    print("You have 2 options:")
+    print("1) Create the `BOTNICK', `BOTCHAT', `BOTAUTH', `BOTAPIID', and `BOTTWIT'" +\
+          " environment variables on your host system (i.e. bashrc, bash_profile or" +\
+          " whatever ridiculous hoops you have to jump through to get this kinda stuff" +\
+          " working on windows [such as installing VirtualBox and running Linux instead])")
+    print("2) DANGEROUS: Replace the os.getenv['XXXX'] lines in the cfg.py with strings" +\
+          " that describe the required variables.\n --==IF YOU DO THIS, NEVER ADD YOUR CFG.PY" +\
+          " TO THE REPO.==--\n Otherwise, your twitch OAuth key will be publically available on" +\
+          " the internet. You have been warned, and your use of BlaskBot in this way" +\
+          " exonerates the devs from any blame for the chaos that ensues.")
+    print("Program will now exit.")
+    exit()
 import functions
 from functions import printv
 import commands
