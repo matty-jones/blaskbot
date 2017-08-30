@@ -11,6 +11,7 @@ import requests
 import time as T
 import os
 import sys
+import socket
 from tinydb import TinyDB, Query
 import tinydb.operations as tdbo
 from multiprocessing import Value
@@ -42,6 +43,21 @@ def printv(msg, v):
 
 
 # ---=== IRC FUNCTIONS ===---
+
+def hostChat():
+    hostSock = socket.socket()
+    hostSock.connect((cfg.HOST, cfg.PORT))
+    hostSock.send("PASS {}\r\n".format(cfg.PASS).encode("utf-8"))
+    hostSock.send("NICK {}\r\n".format(cfg.JOIN).encode("utf-8"))
+    hostSock.send("JOIN #{}\r\n".format(cfg.JOIN).encode("utf-8"))
+    CHAT_MSG = re.compile(r"^:\w+!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :")
+    while True:
+        response = sock.recv(1024).decode("utf-8")
+        if response == "PING :tmi.twitch.tv\r\n":
+            sock.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
+        message = input("Send as " + cfg.JOIN + ": ")
+        chat(hostSock, message)
+
 
 def chat(sock, msg):
     '''
@@ -153,7 +169,6 @@ def threadUpdateDatabase(sock):
                             if int(currentPoints) < int(rankPoints):
                                 break
                             newRank = cfg.ranks[rankPoints]
-                        print(currentPoints, oldRank, newRank)
                         if newRank != oldRank:
                             pointsDatabase.update(tdbo.set('rank', newRank), Query().name == viewer)
                             currencyUnits = cfg.currencyName
@@ -167,7 +182,7 @@ def threadUpdateDatabase(sock):
                 previousViewers = flattenedViewerList[:]
         else:
             printv("Stream not currently up. Not adding points.", 4)
-        printv("Database now looks like this: " + repr(pointsDatabase.all()), 4)
+        printv("Database now looks like this: " + repr(pointsDatabase.all()), 5)
         T.sleep(cfg.awardDeltaT)
 
 
@@ -199,7 +214,7 @@ def getViewerList():
         printv("Error Message: " + errorDetails['message'], 4)
         return None
     except:
-        printv("Unexpected Error: " + sys.exc_info()[0], 2)
+        printv("Unexpected Error: " + repr(sys.exc_info()[0]), 2)
         return None
 
 
