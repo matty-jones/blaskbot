@@ -17,7 +17,7 @@ import tinydb.operations as tdbo
 from multiprocessing import Value
 import xml.etree.ElementTree as ET
 
-headers = {"Authorization":'OAuth ' + os.getenv['BOTAUTH'].split(':')[1]}
+headers = {"Authorization":'OAuth ' + cfg.BOTAUTH.split(':')[1]}
 # This is a global variable, but needs to be shared between timer subprocesses
 # (read only, not modify) so use mp.Value()
 numberOfChatMessages = Value('d', 0)
