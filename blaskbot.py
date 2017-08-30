@@ -2,8 +2,9 @@
 
 try:
     import cfg
-except TypeError:
+except TypeError as e:
     # Environment Variables not set
+    print(e)
     print("NOTE: The required environment variables in cfg.py have not been set.")
     print("You have 2 options:")
     print("1) Create the `BOTNICK', `BOTCHAT', `BOTAUTH', `BOTAPIID', and `BOTTWIT'" +\
