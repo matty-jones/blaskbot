@@ -19,18 +19,19 @@ def main():
     sock.send("JOIN #{}\r\n".format(cfg.JOIN).encode("utf-8"))
 
     CHAT_MSG = re.compile(r"^:\w+!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :")
-    functions.chat(sock, "Booting up...")
+    #functions.chat(sock, "Booting up...")
 
     fillOpList = Process(target=functions.threadFillOpList)
     updateDatabase = Process(target=functions.threadUpdateDatabase, args=([sock]))
     subscribeTimer = Process(target=functions.timer, \
                              args=('subscribe', 1800, [sock, 'blaskatronic']))
+    #typeAsHost = Process(target=functions.hostChat)
 
     fillOpList.start()
     updateDatabase.start()
     subscribeTimer.start()
 
-    functions.chat(sock, "Beep boop Blasky made a python robit")
+    #functions.chat(sock, "Beep boop Blasky made a python robit")
 
     while True:
         response = sock.recv(1024).decode("utf-8")
