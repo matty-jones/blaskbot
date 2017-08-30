@@ -3,25 +3,28 @@ import os
 # Contains BlaskBot's config
 
 # Core interface variables
-HOST = "irc.chat.twitch.tv"
-PORT = 6667
-NICK = os.getenv["BOTNICK"]
-PASS = os.getenv["BOTAUTH"]
-JOIN = os.getenv["BOTCHAT"]
-RATE = 1  # Messages per second
-VERB = 2
+HOST = "irc.chat.twitch.tv"  # The twitch IRC, don't change this.
+PORT = 6667                  # The twitch IRC port, don't change this either.
+NICK = os.getenv["BOTNICK"]  # The bot's name! Must match the twitch account associated with the bot.
+JOIN = os.getenv["BOTCHAT"]  # The channel BlaskBot is to look after (your twitch account name).
+PASS = os.getenv["BOTAUTH"]  # The OAuth for your twitch account (needed to push updates and get more deets).
+RATE = 1  # Messages per second - Don't reduce this below 1 or your bot will get banned.
+VERB = 2  # Verbosity of outputs while the bot is running (1 - 5).
 
 # Function interface variables
-twitchAPIClientID = os.getenv["BOTAPIID"]
-owner = 'Blaskatronic'
-twitterUsername = os.getenv["BOTTWIT"]
-opList = []
-opOnlyCommands = ['subscribe']
+twitchAPIClientID = os.getenv["BOTAPIID"]  # The bot needs a clientID for the twitch API
+owner = 'Blaskatronic'  # Dev name (will grant this person op in the bot to help troubleshoot)
+twitterUsername = os.getenv["BOTTWIT"]  # The name of the twitter channel to pull latest tweets from
+opList = []  # List of ops. You can leave this empty - BlaskBot will populate this list when the stream is live
+opOnlyCommands = ['subscribe']  # Any commands that you want to be op-only (i.e. viewers can't use them)
+VLCLUAPASS = os.getenv["VLCLUAPASS"]  # This is the password for the LUA HTTP interface created by vlc.
+                                      # If you don't know what this is, add 'nowplaying' to the opOnlyCommands
+                                      # and never use it.
 
 # Viewer Points Database
-pointsToAward = 1
-awardDeltaT = 60
-currencyName = "BlasKoin"
+pointsToAward = 1  # Award this many points to a viewer...
+awardDeltaT = 60   # ...after they have watched for this many seconds
+currencyName = "BlasKoin"  # Custom currenty name
 ranks = {10: 'Probe',
          50: 'Zealot',
          100: 'Adept',
@@ -42,4 +45,4 @@ ranks = {10: 'Probe',
          1500: 'Carrier',
          2000: 'Mothership',
          2500: 'MissingNo.',
-         3000: 'NaN'}
+         3000: 'NaN'}  # Set the ranks to whatever you want! Syntax = points: rankName
