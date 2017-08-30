@@ -5,16 +5,16 @@ import os
 # Core interface variables
 HOST = "irc.chat.twitch.tv"
 PORT = 6667
-NICK = os.environ["BOTNICK"]
-PASS = os.environ["BOTAUTH"]
-JOIN = os.environ["BOTCHAT"]
+NICK = os.getenv["BOTNICK"]
+PASS = os.getenv["BOTAUTH"]
+JOIN = os.getenv["BOTCHAT"]
 RATE = 1  # Messages per second
 VERB = 2
 
 # Function interface variables
-twitchAPIClientID = os.environ["BOTAPIID"]
+twitchAPIClientID = os.getenv["BOTAPIID"]
 owner = 'Blaskatronic'
-twitterUsername = os.environ["BOTTWIT"]
+twitterUsername = os.getenv["BOTTWIT"]
 opList = []
 opOnlyCommands = ['subscribe']
 

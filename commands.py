@@ -107,7 +107,7 @@ def nowplaying(args):
     sock = args[0]
     VLCLUAURL = "http://127.0.0.1:8080/requests/status.xml"
     try:
-        nowPlayingData = _requests.get(VLCLUAURL, auth=('',_os.environ['VLCLUAPASS']))
+        nowPlayingData = _requests.get(VLCLUAURL, auth=('',_os.getenv['VLCLUAPASS']))
         VLCDict = _getXMLAttributes(nowPlayingData.content)
         nowPlayingLine = _uesc(VLCDict['information']['meta']['title']) + " by " +\
                 _uesc(VLCDict['information']['meta']['artist'])
