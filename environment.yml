@@ -1,0 +1,8 @@
+name: blaskbot
+channels:
+- defaults
+- conda-forge
+dependencies:
+- python
+- requests
+- tinydb
