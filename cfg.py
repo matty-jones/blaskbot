@@ -7,9 +7,9 @@ HOST = "irc.chat.twitch.tv"
 PORT = 6667
 NICK = os.environ["BOTNICK"]
 PASS = os.environ["BOTAUTH"]
-JOIN = os.environ["BOTCHATTEST"]
+JOIN = os.environ["BOTCHAT"]
 RATE = 1  # Messages per second
-VERB = 4
+VERB = 2
 
 # Function interface variables
 twitchAPIClientID = os.environ["BOTAPIID"]
