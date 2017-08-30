@@ -7,9 +7,10 @@ HOST = "irc.chat.twitch.tv"  # The twitch IRC, don't change this.
 PORT = 6667                  # The twitch IRC port, don't change this either.
 NICK = os.getenv("BOTNICK")  # The bot's name! Must match the twitch account associated with the bot.
 JOIN = os.getenv("BOTCHAT")  # The channel BlaskBot is to look after (your twitch account name).
-PASS = os.getenv("BOTAUTH")  # The OAuth for your twitch account (needed to push updates and get more deets).
+PASS = os.getenv("BOTAUTH")  # The OAuth for the bot's twitch account (needed so the bot can chat).
+HOSTPASS = os.getenv("HOSTAUTH")  # The OAuth for the host's twitch account (needed for channel SET updates)
 RATE = 1  # Messages per second - Don't reduce this below 1 or your bot will get banned.
-VERB = 2  # Verbosity of outputs while the bot is running (1 - 5).
+VERB = 5  # Verbosity of outputs while the bot is running (1 - 5).
 
 # Function interface variables
 twitchAPIClientID = os.getenv("BOTAPIID")  # The bot needs a clientID for the twitch API

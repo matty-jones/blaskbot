@@ -5,13 +5,13 @@ try:
 except TypeError as e:
     # Environment Variables not set
     print(e)
-    print("NOTE: The required environment variables in cfg.py have not been set.")
+    print("NOTE: At least one of the required environment variables in cfg.py has not been set.")
     print("You have 2 options:")
-    print("1) Create the `BOTNICK', `BOTCHAT', `BOTAUTH', `BOTAPIID', and `BOTTWIT'" +\
+    print("1) Create the `BOTNICK', `BOTCHAT', `BOTAUTH', `BOTAPIID', 'HOSTAUTH', and `BOTTWIT'" +\
           " environment variables on your host system (i.e. bashrc, bash_profile or" +\
           " whatever ridiculous hoops you have to jump through to get this kinda stuff" +\
           " working on windows [such as installing VirtualBox and running Linux instead])")
-    print("2) DANGEROUS: Replace the os.getenv['XXXX'] lines in the cfg.py with strings" +\
+    print("2) DANGEROUS: Replace the os.getenv('XXXX') lines in the cfg.py with strings" +\
           " that describe the required variables.\n --==IF YOU DO THIS, NEVER ADD YOUR CFG.PY" +\
           " TO THE REPO.==--\n Otherwise, your twitch OAuth key will be publically available on" +\
           " the internet. You have been warned, and your use of BlaskBot in this way" +\
