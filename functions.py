@@ -171,12 +171,13 @@ def threadUpdateDatabase(sock):
                             newRank = cfg.ranks[rankPoints]
                         if newRank != oldRank:
                             pointsDatabase.update(tdbo.set('rank', newRank), Query().name == viewer)
-                            currencyUnits = cfg.currencyName
-                            if currentPoints > 1:
-                                currencyUnits += "s"
-                            chat(sock, "Congratulations " + viewer + ", you have been promoted" +\
-                                 " to the rank of " + newRank + "! You now have " +\
-                                 str(currentPoints) + " " + currencyUnits + " to spend!")
+                            if pointsDatabase.search(Query().name == viewer)[0]['lurker'] is False:
+                                currencyUnits = cfg.currencyName
+                                if currentPoints > 1:
+                                    currencyUnits += "s"
+                                chat(sock, "Congratulations " + viewer + ", you have been promoted" +\
+                                     " to the rank of " + newRank + "! You now have " +\
+                                     str(currentPoints) + " " + currencyUnits + " to spend!")
                         printv(viewer + " now has " + str(pointsDatabase.search(Query().name ==\
                                 viewer)[0]['points']) + " points.", 5)
                 previousViewers = flattenedViewerList[:]
