@@ -152,26 +152,29 @@ def threadUpdateDatabase(sock):
                         if len(pointsDatabase.search(Query().name == viewer)) == 0:
                             printv("Adding " + viewer + " to database...", 4)
                             pointsDatabase.insert({'name': viewer, 'points': 0, 'rank': 'None',
-                                                   'multiplier': 1})
+                                                   'multiplier': 1, 'lurker': True, 'totalPoints': 0})
                         printv(viewer + " has " + str(pointsDatabase.search(Query().name ==\
                                 viewer)[0]['points']) + " points.", 5)
                         printv("Incrementing " + viewer + "'s points...", 4)
                         pointsDatabase.update(tdbo.add('points', cfg.pointsToAward), \
                                               Query().name == viewer)
-                        # Skip calculating the ranks for anyone in skipViewers
-                        if viewer in skipViewers:
-                            continue
+                        # Also increment `totalPoints' which is used to keep track of
+                        # view time without taking into account minigame losses
+                        pointsDatabase.update(tdbo.add('totalPoints', cfg.pointsToAward), \
+                                              Query().name == viewer)
                         printv("Calculating " + viewer + "'s rank...", 5)
                         currentPoints = pointsDatabase.search(Query().name == viewer)[0]['points']
+                        currentTotalPoints = pointsDatabase.search(Query().name == viewer)[0]['totalPoints']
                         oldRank = pointsDatabase.search(Query().name == viewer)[0]['rank']
                         newRank = str(oldRank)
                         for rankPoints in sorted(cfg.ranks.keys()):
-                            if int(currentPoints) < int(rankPoints):
+                            if int(currentTotalPoints) < int(rankPoints):
                                 break
                             newRank = cfg.ranks[rankPoints]
                         if newRank != oldRank:
                             pointsDatabase.update(tdbo.set('rank', newRank), Query().name == viewer)
-                            if pointsDatabase.search(Query().name == viewer)[0]['lurker'] is False:
+                            if (pointsDatabase.search(Query().name == viewer)[0]['lurker'] is False) and
+                                (viewer not in skipViewers):
                                 currencyUnits = cfg.currencyName
                                 if currentPoints > 1:
                                     currencyUnits += "s"
@@ -179,7 +182,8 @@ def threadUpdateDatabase(sock):
                                      " to the rank of " + newRank + "! You now have " +\
                                      str(currentPoints) + " " + currencyUnits + " to spend!")
                         printv(viewer + " now has " + str(pointsDatabase.search(Query().name ==\
-                                viewer)[0]['points']) + " points.", 5)
+                                viewer)[0]['totalPoints']) + " points, and " str(currentPoints) " to" +\
+                               " spend on minigames.", 5)
                 previousViewers = flattenedViewerList[:]
         else:
             printv("Stream not currently up. Not adding points.", 4)
