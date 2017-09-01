@@ -164,7 +164,7 @@ def threadUpdateDatabase(sock):
                         printv("Calculating " + viewer + "'s rank...", 5)
                         currentPoints = pointsDatabase.search(Query().name == viewer)[0]['points']
                         oldRank = pointsDatabase.search(Query().name == viewer)[0]['rank']
-                        newRank = None
+                        newRank = str(oldRank)
                         for rankPoints in sorted(cfg.ranks.keys()):
                             if int(currentPoints) < int(rankPoints):
                                 break
