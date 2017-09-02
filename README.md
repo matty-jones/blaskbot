@@ -1,4 +1,4 @@
-# BlaskBot v0.5 #
+# BlaskBot v0.6 #
 
 
 The nascent stages of a custom-built fully-fledged Twitch bot.
@@ -12,6 +12,7 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 * A load of fun/useful bot commands (listed below)
 * Connection to twitch and twitter APIs
 * `Lurker Protection' - the bot won't call you out in chat until you've sent at least one message during the stream!
+* The ability to send messages as the channel host/streamer through the bot, directly from the terminal
 
 
 ## Current commands: ##
@@ -32,7 +33,6 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 
 
 ## To do: ##
-* Allow the streamer to send messages from the bot terminal window
 * Allow the streamer to update the title, game, and communities either from the cfg file or the bot terminal window
 * !slot minigame with a jackpot where people can win steam keys located in a database
 * Add Gibu's !buydrinks command! Because everyone loves to get wasted during our streams.
@@ -51,6 +51,8 @@ v0.3: Removed sensitive data from repo and released under GPL 3.0
 v0.4: Added a database to keep track of live viewers and award a custom number of points at custom intervals
 
 v0.5: Added the clip database engine
+
+v0.6: Added the ability to send messages as the streamer through the bot, directly from the terminal
 
 
 ## Installation Instructions: ##
