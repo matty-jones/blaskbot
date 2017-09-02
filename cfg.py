@@ -22,6 +22,14 @@ VLCLUAPASS = os.getenv("VLCLUAPASS")  # This is the password for the LUA HTTP in
                                       # If you don't know what this is, add 'nowplaying' to the opOnlyCommands
                                       # and never use it.
 
+
+# Channel Stuff
+streamTitle = "TEST_TITLE"
+gameTitle = "Creative"
+# The Twitch API won't let me update communities according to their documentation, so dunno
+# how else to do it.
+#communityList = ['UK_Streamers', 'SupportSmallStreamers', 'VarietyStreaming']
+
 # Viewer Points Database
 pointsToAward = 1  # Award this many points to a viewer...
 awardDeltaT = 60   # ...after they have watched for this many seconds
