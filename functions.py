@@ -259,11 +259,24 @@ def streamIsUp():
     return True
 
 
+def setStreamParams():
+    streamParams = {"channel": {'status': cfg.streamTitle, 'game': cfg.gameTitle}}
+    channelURL = "https://api.twitch.tv/kraken/channels/" + cfg.JOIN
+    #channelURL = "https://api.twitch.tv/kraken/channel"
+    put(channelURL, streamParams)
+
+
 def request(URL, header=headers):
     printv("Reading from URL: '" + URL + "'...", 5)
     req = requests.get(URL, headers=header)
     printv("Loading user_data json...", 5)
     return req.json()
+
+
+def put(URL, dataDict, header=headers):
+    print("Sending " + repr(dataDict) + " to URL: '" + URL + "'...", 4)
+    req = requests.put(URL, data=dataDict, headers=header)
+    print(req.url)
 
 
 def incrementNumberOfChatMessages():
