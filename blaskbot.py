@@ -42,6 +42,7 @@ def main():
     updateDatabase = Process(target=functions.threadUpdateDatabase, args=([sock]))
     subscribeTimer = Process(target=functions.timer, \
                              args=('subscribe', 1800, [sock, 'blaskatronic']))
+    functions.setAllToLurker()
     #typeAsHost = Process(target=functions.hostChat)
 
     fillOpList.start()
@@ -56,6 +57,7 @@ def main():
             sock.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
         else:
             username = re.search(r"\w+", response).group(0)
+            functions.updateLurkerStatus(username)
             message = CHAT_MSG.sub("", response)
             functions.printv(username + ": " + message, 1)
             if message.strip()[0] == "!":
@@ -71,7 +73,7 @@ def main():
                     functions.printv("No function by the name " + command + "!", 4)
             else:
                 # Increment the number of sent messages
-                if username.lower() != 'blaskbot':
+                if username.lower() not in ['blaskbot', 'tmi', 'blaskatronic']:
                     functions.incrementNumberOfChatMessages()
         # Sleep and then rerun loop
         T.sleep(1)
