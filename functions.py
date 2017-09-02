@@ -44,18 +44,20 @@ def printv(msg, v):
 
 # ---=== IRC FUNCTIONS ===---
 
-def hostChat():
-    hostSock = socket.socket()
-    hostSock.connect((cfg.HOST, cfg.PORT))
-    hostSock.send("PASS {}\r\n".format(cfg.PASS).encode("utf-8"))
-    hostSock.send("NICK {}\r\n".format(cfg.JOIN).encode("utf-8"))
-    hostSock.send("JOIN #{}\r\n".format(cfg.JOIN).encode("utf-8"))
-    CHAT_MSG = re.compile(r"^:\w+!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :")
+def getSocket(nick, auth, channel):
+    sock = socket.socket()
+    sock.connect((cfg.HOST, cfg.PORT))
+    sock.send("PASS {}\r\n".format(auth).encode("utf-8"))
+    sock.send("NICK {}\r\n".format(nick).encode("utf-8"))
+    sock.send("JOIN #{}\r\n".format(channel).encode("utf-8"))
+    return sock
+
+
+def hostChat(hostSock, stdin):
+    sys.stdin = stdin
     while True:
-        response = sock.recv(1024).decode("utf-8")
-        if response == "PING :tmi.twitch.tv\r\n":
-            sock.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
         message = input("Send as " + cfg.JOIN + ": ")
+        print("MESSAGE RECEIVED, SENDING IT TO THE IRC")
         chat(hostSock, message)
 
 
@@ -130,7 +132,7 @@ def threadUpdateDatabase(sock):
     printv("Loading the viewer database...", 5)
     viewerDatabase = loadViewersDatabase()
     printv("Database loaded!", 5)
-    skipViewers = ['blaskatronic', 'blaskbot', 'doryx', 'fsmimp']
+    skipViewers = ['blaskatronic', 'blaskbot', 'doryx']
     previousViewers = []
     while True:
         if streamIsUp():
@@ -162,6 +164,8 @@ def threadUpdateDatabase(sock):
                         # view time without taking into account minigame losses
                         viewerDatabase.update(tdbo.add('totalPoints', cfg.pointsToAward), \
                                               Query().name == viewer)
+                        if viewer in skipViewers:
+                            continue
                         printv("Calculating " + viewer + "'s rank...", 5)
                         currentPoints = viewerDatabase.search(Query().name == viewer)[0]['points']
                         currentTotalPoints = viewerDatabase.search(Query().name == viewer)[0]['totalPoints']
@@ -198,8 +202,8 @@ def updateLurkerStatus(username):
             printv(username + " spoke, so disabling lurker mode.", 5)
             viewerDB.update(tdbo.set('lurker', 'false'), Query().name == username)
     except IndexError as e:
-        print(e)
         # Happens when the response is not yet in DB
+        printv("Error updating lurker status for " + username + ": " + str(e), 5)
         pass
 
 
