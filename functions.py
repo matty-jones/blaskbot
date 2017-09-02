@@ -152,7 +152,7 @@ def threadUpdateDatabase(sock):
                         if len(pointsDatabase.search(Query().name == viewer)) == 0:
                             printv("Adding " + viewer + " to database...", 4)
                             pointsDatabase.insert({'name': viewer, 'points': 0, 'rank': 'None',
-                                                   'multiplier': 1, 'lurker': True, 'totalPoints': 0})
+                                                   'multiplier': 1, 'lurker': 'true', 'totalPoints': 0})
                         printv(viewer + " has " + str(pointsDatabase.search(Query().name ==\
                                 viewer)[0]['points']) + " points.", 5)
                         printv("Incrementing " + viewer + "'s points...", 4)
@@ -173,7 +173,7 @@ def threadUpdateDatabase(sock):
                             newRank = cfg.ranks[rankPoints]
                         if newRank != oldRank:
                             pointsDatabase.update(tdbo.set('rank', newRank), Query().name == viewer)
-                            if (pointsDatabase.search(Query().name == viewer)[0]['lurker'] is False) and
+                            if (pointsDatabase.search(Query().name == viewer)[0]['lurker'] == 'false') and
                                 (viewer not in skipViewers):
                                 currencyUnits = cfg.currencyName
                                 if currentPoints > 1:
