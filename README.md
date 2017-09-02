@@ -11,6 +11,7 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 * A rudimentary permissions engine that restricts certain commands from being executed by non-mods
 * A load of fun/useful bot commands (listed below)
 * Connection to twitch and twitter APIs
+* `Lurker Protection' - the bot won't call you out in chat until you've sent at least one message during the stream!
 
 
 ## Current commands: ##
@@ -33,10 +34,10 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 ## To do: ##
 * Allow the streamer to send messages from the bot terminal window
 * Allow the streamer to update the title, game, and communities either from the cfg file or the bot terminal window
+* !slot minigame with a jackpot where people can win steam keys located in a database
 * Add Gibu's !buydrinks command! Because everyone loves to get wasted during our streams.
 * Notify on host, follow, sub
 * !harrass-esque minigame for people to gamble BlasKoins on
-* !slot minigame with a jackpot where people can win steam keys located in a database
 * !streamrank command that parses all streams for the current game and outputs the current rank based on viewers (maybe run this as a thread so that it keeps updating in the background for stats)
 
 
