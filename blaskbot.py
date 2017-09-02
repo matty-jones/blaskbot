@@ -37,20 +37,23 @@ def main():
     CHAT_MSG = re.compile(r"^:\w+!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :")
     #functions.chat(sock, "Booting up...")
 
+    # Fire the one-off functions to be performed on boot
+    functions.setAllToLurker()
+    functions.setStreamParams()
+    exit()
+
+    # Create asynchronous, recurring child processes...
     fillOpList = Process(target=functions.threadFillOpList)
     updateDatabase = Process(target=functions.threadUpdateDatabase, args=([botComm]))
     subscribeTimer = Process(target=functions.timer, \
                              args=('subscribe', 1800, [botComm, 'blaskatronic']))
-    functions.setAllToLurker()
     typeAsHost = Process(target=functions.hostChat, args=([hostComm,\
                             os.fdopen(os.dup(sys.stdin.fileno()))]))
-
+    # ...and start them
     fillOpList.start()
     updateDatabase.start()
     subscribeTimer.start()
     typeAsHost.start()
-
-    #functions.chat(botComm, "Beep boop Blasky made a python robit")
 
     while True:
         hostResponse = hostComm.recv(1024).decode("utf-8")
