@@ -127,8 +127,8 @@ def threadFillOpList():
 
 
 def threadUpdateDatabase(sock):
-    printv("Loading the points database...", 5)
-    pointsDatabase = loadPointsDatabase()
+    printv("Loading the viewer database...", 5)
+    viewerDatabase = loadViewersDatabase()
     printv("Database loaded!", 5)
     skipViewers = ['blaskatronic', 'blaskbot', 'doryx', 'fsmimp']
     previousViewers = []
@@ -149,31 +149,31 @@ def threadUpdateDatabase(sock):
                                " points...", 5)
                         printv("Checking if " + viewer + " is in database...", 4)
                         # Check if viewer is already in the database
-                        if len(pointsDatabase.search(Query().name == viewer)) == 0:
+                        if len(viewerDatabase.search(Query().name == viewer)) == 0:
                             printv("Adding " + viewer + " to database...", 4)
-                            pointsDatabase.insert({'name': viewer, 'points': 0, 'rank': 'None',
+                            viewerDatabase.insert({'name': viewer, 'points': 0, 'rank': 'None',
                                                    'multiplier': 1, 'lurker': 'true', 'totalPoints': 0})
-                        printv(viewer + " has " + str(pointsDatabase.search(Query().name ==\
+                        printv(viewer + " has " + str(viewerDatabase.search(Query().name ==\
                                 viewer)[0]['points']) + " points.", 5)
                         printv("Incrementing " + viewer + "'s points...", 4)
-                        pointsDatabase.update(tdbo.add('points', cfg.pointsToAward), \
+                        viewerDatabase.update(tdbo.add('points', cfg.pointsToAward), \
                                               Query().name == viewer)
                         # Also increment `totalPoints' which is used to keep track of
                         # view time without taking into account minigame losses
-                        pointsDatabase.update(tdbo.add('totalPoints', cfg.pointsToAward), \
+                        viewerDatabase.update(tdbo.add('totalPoints', cfg.pointsToAward), \
                                               Query().name == viewer)
                         printv("Calculating " + viewer + "'s rank...", 5)
-                        currentPoints = pointsDatabase.search(Query().name == viewer)[0]['points']
-                        currentTotalPoints = pointsDatabase.search(Query().name == viewer)[0]['totalPoints']
-                        oldRank = pointsDatabase.search(Query().name == viewer)[0]['rank']
+                        currentPoints = viewerDatabase.search(Query().name == viewer)[0]['points']
+                        currentTotalPoints = viewerDatabase.search(Query().name == viewer)[0]['totalPoints']
+                        oldRank = viewerDatabase.search(Query().name == viewer)[0]['rank']
                         newRank = str(oldRank)
                         for rankPoints in sorted(cfg.ranks.keys()):
                             if int(currentTotalPoints) < int(rankPoints):
                                 break
                             newRank = cfg.ranks[rankPoints]
                         if newRank != oldRank:
-                            pointsDatabase.update(tdbo.set('rank', newRank), Query().name == viewer)
-                            if (pointsDatabase.search(Query().name == viewer)[0]['lurker'] == 'false') and
+                            viewerDatabase.update(tdbo.set('rank', newRank), Query().name == viewer)
+                            if (viewerDatabase.search(Query().name == viewer)[0]['lurker'] == 'false') and\
                                 (viewer not in skipViewers):
                                 currencyUnits = cfg.currencyName
                                 if currentPoints > 1:
@@ -181,19 +181,36 @@ def threadUpdateDatabase(sock):
                                 chat(sock, "Congratulations " + viewer + ", you have been promoted" +\
                                      " to the rank of " + newRank + "! You now have " +\
                                      str(currentPoints) + " " + currencyUnits + " to spend!")
-                        printv(viewer + " now has " + str(pointsDatabase.search(Query().name ==\
-                                viewer)[0]['totalPoints']) + " points, and " str(currentPoints) " to" +\
-                               " spend on minigames.", 5)
+                        printv(viewer + " now has " + str(viewerDatabase.search(Query().name ==\
+                                viewer)[0]['totalPoints']) + " points, and " + \
+                               str(currentPoints) + " to spend on minigames.", 5)
                 previousViewers = flattenedViewerList[:]
         else:
             printv("Stream not currently up. Not adding points.", 4)
-        printv("Database now looks like this: " + repr(pointsDatabase.all()), 5)
+        printv("Database now looks like this: " + repr(viewerDatabase.all()), 5)
         T.sleep(cfg.awardDeltaT)
 
 
-def loadPointsDatabase():
-    pointsDB = TinyDB('./databases/' + cfg.JOIN + 'Points.db')
-    return pointsDB
+def updateLurkerStatus(username):
+    viewerDB = loadViewersDatabase()
+    try:
+        if viewerDB.search(Query().name == username)[0]['lurker'] == 'true':
+            printv(username + " spoke, so disabling lurker mode.", 5)
+            viewerDB.update(tdbo.set('lurker', 'false'), Query().name == username)
+    except IndexError as e:
+        print(e)
+        # Happens when the response is not yet in DB
+        pass
+
+
+def setAllToLurker():
+    viewerDB = loadViewersDatabase()
+    viewerDB.update(tdbo.set('lurker', 'true'), Query().name.exists())
+
+
+def loadViewersDatabase():
+    viewerDB = TinyDB('./databases/' + cfg.JOIN + 'Viewers.db')
+    return viewerDB
 
 
 def loadClipsDatabase():

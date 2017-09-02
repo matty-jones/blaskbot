@@ -6,7 +6,7 @@ can call upon for execution.
 from functions import chat as _chat
 from functions import request as _request
 from functions import getXMLAttributes as _getXMLAttributes
-from functions import loadPointsDatabase as _getPointsDB
+from functions import loadViewersDatabase as _getViewersDB
 from functions import loadClipsDatabase as _getClipsDB
 from functions import isOp as _isOp
 from functions import printv as _printv
@@ -158,14 +158,14 @@ def uptime(args):
 def blaskoins(args):
     sock = args[0]
     userName = args[1]
-    pointsDB = _getPointsDB()
+    viewerDB = _getViewersDB()
     try:
-        currentPoints = pointsDB.search(_Query().name == userName)[0]['points']
+        currentPoints = viewerDB.search(_Query().name == userName)[0]['points']
         currencyUnits = _cfg.currencyName
         if currentPoints > 1:
             currencyUnits += "s"
-        currentRank = pointsDB.search(_Query().name == userName)[0]['rank']
-        currentMultiplier = pointsDB.search(_Query().name == userName)[0]['multiplier']
+        currentRank = viewerDB.search(_Query().name == userName)[0]['rank']
+        currentMultiplier = viewerDB.search(_Query().name == userName)[0]['multiplier']
         nextRank = None
         pointsForNextRank = None
         for rankPoints in _cfg.ranks.keys():
@@ -187,9 +187,12 @@ def blaskoins(args):
         timeToNext = ' and '.join(timeArray[-2:])
         if len(timeArray) == 3:
             timeToNext = timeToNext[0] + ", " + timeToNext
+        rankMod = ' '
+        if currentRank[0] in ['a', 'e', 'i', 'o', 'u']:
+            rankMod = 'n '
         outputLine = userName + " currently has " + str(currentPoints) + " " +\
-                str(currencyUnits) + " and is a " +\
-                str(currentRank) + " (" + timeToNext + " until next rank!)"
+                str(currencyUnits) + " and is a" + rankMod + str(currentRank) +\
+                " (" + timeToNext + " until next rank!)"
         _chat(sock, outputLine)
     except IndexError:
         _chat(sock, "I'm sorry, " + userName + ", but I don't have any " + _cfg.currencyName +\
