@@ -93,7 +93,7 @@ The prerequisites are stored in requirements.yml and this file will be updated w
 
 * Installing Requisite Python Modules (on Linux/Unix, check the Conda documentation for how to activate and install environments on Windows):
     * First install miniconda for your machine from https://conda.io/miniconda.html (python 3.6 is recommended)
-    * When miniconda has been installed and the `PYTHONPATH` environment variable updated to miniconda's location (should be done automatically), the environment can be set up by using `conda env create -f requirements.yml` from BlaskBot's root directory.
+    * When miniconda has been installed and the `PYTHONPATH` environment variable updated to miniconda's location (should be done automatically), the environment can be set up by using `conda env create -f requirements.yml` from BlaskBot's root directory. (NB: On Linux you might get an error about tinydb 3.5.0 not being in the linux-64 conda channel. A simple `pip install tinydb==3.5.0` should fix this.
     * After installation, the environment can be activated using `source activate blaskbot`. The environment will need to be active for the bot the run.
 
 
