@@ -40,7 +40,6 @@ def main():
     # Fire the one-off functions to be performed on boot
     functions.setAllToLurker()
     functions.setStreamParams()
-    exit()
 
     # Create asynchronous, recurring child processes...
     fillOpList = Process(target=functions.threadFillOpList)

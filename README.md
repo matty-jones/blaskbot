@@ -1,4 +1,4 @@
-# BlaskBot v0.6 #
+# BlaskBot v0.7 #
 
 
 The nascent stages of a custom-built fully-fledged Twitch bot.
@@ -25,6 +25,7 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 * !help: Outputs the list of commands that the user has permission to run
 * !roll X: rolls a dX for a random integer
 * !schedule: Outputs the schedule information
+* !slot: Rolls the slot machine! Feelin' lucky, punk?
 * !subscribe: Outputs a random line from a text file of useful notifications, on a timer providing at least one non-command chat message has been sent since the last time it output.
 * !time: Outputs the current local time
 * !twitter: Uses the Twitter API to output the latest tweet
@@ -34,10 +35,12 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 
 ## To do: ##
 * Allow the streamer to update the title, game, and communities either from the cfg file or the bot terminal window
-* !slot minigame with a jackpot where people can win steam keys located in a database
 * Add Gibu's !buydrinks command! Because everyone loves to get wasted during our streams.
+* Create the infrastructure for the jackpot in the !slot game
+* A !nextstream command to show when the next stream is and how long until it
+* !help functions for all commands (either !help <COMMAND> or !<COMMAND> help)
 * Notify on host, follow, sub
-* !harrass-esque minigame for people to gamble BlasKoins on
+* !duel-esque minigame for people to gamble BlasKoins on
 * !streamrank command that parses all streams for the current game and outputs the current rank based on viewers (maybe run this as a thread so that it keeps updating in the background for stats)
 
 
@@ -53,6 +56,8 @@ v0.4: Added a database to keep track of live viewers and award a custom number o
 v0.5: Added the clip database engine
 
 v0.6: Added the ability to send messages as the streamer through the bot, directly from the terminal
+
+v0.7: Created the !slot minigame
 
 
 ## Installation Instructions: ##

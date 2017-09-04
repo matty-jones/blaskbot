@@ -20,6 +20,7 @@ from datetime import datetime as _datetime
 import re as _re
 from html import unescape as _uesc
 from tinydb import Query as _Query
+import tinydb.operations as _tdbo
 
 
 def time(args):
@@ -160,7 +161,7 @@ def blaskoins(args):
     userName = args[1]
     viewerDB = _getViewersDB()
     try:
-        currentPoints = viewerDB.search(_Query().name == userName)[0]['points']
+        currentPoints = viewerDB.search(_Query().name == userName)[0]['totalPoints']
         currencyUnits = _cfg.currencyName
         if currentPoints > 1:
             currencyUnits += "s"
@@ -248,6 +249,61 @@ def clip(args):
     else:
         _chat(sock, "The correct syntax is !clip, !clip #, or !clip <NAME>.")
 
+
+def slot(args):
+    sock = args[0]
+    userName = args[1]
+    viewerDatabase = _getViewersDB()
+    currentPoints = viewerDatabase.search(_Query().name == userName)[0]['points']
+    if currentPoints < _cfg.slotCost:
+        _chat(sock, "Sorry, " + userName + ", but you do not have enough" + _cfg.currencyName +\
+              " to play! You need at least " + str(_cfg.slotCost) + ".")
+        return 0
+    _chat(sock, "You insert " + str(_cfg.slotCost) + " " + _cfg.currencyName +\
+          "s and pull the slot machine arm...")
+    with open('./slotWin.txt', 'r') as winFile:
+        winLines = winFile.readlines()
+    with open('./slotLose.txt', 'r') as loseFile:
+        loseLines = loseFile.readlines()
+    results = []
+    for i in range(_cfg.slotNReels):
+        results.append(_R.choice(_cfg.slotStops))
+    _chat(sock, "| " + " | ".join([x for x in results]) + " |")
+    responseLine = _R.choice(winLines)[:-1]
+    if (len(list(set(results))) == _cfg.slotNReels) and (results != _cfg.slotJackpot):
+        # None are matching
+        responseLine = _R.choice(loseLines)[:-1]
+        payout = _cfg.slotPayout[0]
+    elif len(list(set(results))) == 3:
+        # Exactly 2 are matching
+        responseLine += " A pair!"
+        payout = _cfg.slotPayout[2]
+    elif len(list(set(results))) == 2:
+        # Could be 2x2 or exactly 3 matching
+        if results.count(list(set(results))[0]) == 2:
+            # 2x2 are matching
+            responseLine += " Two pairs!"
+            payout = _cfg.slotPayout[1]
+        else:
+            # 3 are matching
+            responseLine += " Trips!"
+            payout = _cfg.slotPayout[3]
+    elif len(list(set(results))) == 1:
+        # All 4 match
+        responseLine += " 4-of-a-kind!"
+        payout = _cfg.slotPayout[4]
+    elif results == _cfg.slotJackpot:
+        responseLine = "YOU HAVE WON THE JACKPOT!"
+        payout = 0
+        # TODO Add the game keys to the database
+    if payout == 1:
+        responseLine += " A single" + _cfg.currencyName + " clatters out" +\
+                " of the machine!"
+    elif payout > 1:
+        responseLine += " " + str(payout) + " " + _cfg.currencyName + "s clatter out" +\
+                " of the machine!"
+    viewerDatabase.update(_tdbo.add('points', -10 + payout), _Query().name == userName)
+    _chat(sock, responseLine)
 
 
 # TODO: Create an op-only command !streamrank that parses all streams for this game and outputs our current rank based on viewers.

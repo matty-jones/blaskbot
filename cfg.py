@@ -55,3 +55,19 @@ ranks = {10: 'Probe',
          2000: 'Mothership',
          2500: 'MissingNo.',
          3000: 'NaN'}  # Set the ranks to whatever you want! Syntax = points: rankName
+
+# Minigames
+#  Slot machine
+# Please feel free to use your own slot machine numbers here, but be mindful
+# of the probabilities/payouts!
+# Although it doesn't cost us anything to pay out more currency, I would like
+# to keep the viewer['points'] and viewer['totalPoints'] somewhat even on
+# average. As such, the below payout numbers are correctly calibrated such
+# that the machine pays out with a 98.8% payoff percentage.
+slotNReels = 4
+slotStops = ['MrDestructoid', 'VoHiYo', 'Kappa', 'CoolStoryBob', 'Squid1',\
+             'Squid2', 'Squid3', 'Squid4', 'TwitchRPG', 'PJSalt']
+slotCost = 10
+slotPayout = {0: 0, 1: 100, 2: 5, 3: 70, 4: 2500} # The keys correspond to the
+                    # number of matches. 1 here indicates 2x2 stop matches
+slotJackpot = ['Squid1', 'Squid2', 'Squid3', 'Squid4']
