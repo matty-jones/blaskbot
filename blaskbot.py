@@ -45,7 +45,7 @@ def main():
     fillOpList = Process(target=functions.threadFillOpList)
     updateDatabase = Process(target=functions.threadUpdateDatabase, args=([botComm]))
     subscribeTimer = Process(target=functions.timer, \
-                             args=('subscribe', 1800, [botComm, 'blaskatronic']))
+                             args=('subscribe', 3600, [botComm, 'blaskatronic']))
     typeAsHost = Process(target=functions.hostChat, args=([hostComm,\
                             os.fdopen(os.dup(sys.stdin.fileno()))]))
     # ...and start them
