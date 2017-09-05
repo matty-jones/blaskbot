@@ -254,7 +254,10 @@ def isOp(user):
 def streamIsUp():
     streamDataURL = "https://api.twitch.tv/kraken/streams/" + cfg.JOIN
     streamData = request(streamDataURL)
-    if not streamData['stream']:
+    try:
+        if not streamData['stream']:
+            return False
+    except KeyError:
         return False
     return True
 
@@ -290,7 +293,7 @@ def timer(command, delay, arguments):
     try:
         exec("from commands import " + str(command))
         while True:
-            # All timers must wait until 5 minutes after 1 chat message
+            # All timers must wait until 15 minutes after 1 chat message
             # has been sent before executing the command again.
             if numberOfChatMessages.value > previousNumberOfChatMessages:
                 exec(str(command) + "(arguments)")
@@ -300,7 +303,7 @@ def timer(command, delay, arguments):
                 printv("Not enough messages sent to run again (" + \
                        str(numberOfChatMessages.value) + " <= " + \
                        str(previousNumberOfChatMessages) + "). Sleeping.", 5)
-                T.sleep(300)
+                T.sleep(900)
     except (AttributeError, ImportError):
         printv("No function by the name " + command + "!", 4)
 
