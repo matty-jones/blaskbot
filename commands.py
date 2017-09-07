@@ -10,6 +10,7 @@ from functions import loadViewersDatabase as _getViewersDB
 from functions import loadClipsDatabase as _getClipsDB
 from functions import isOp as _isOp
 from functions import printv as _printv
+from functions import getViewerList as _getViewerList
 import sys as _sys
 import os as _os
 import cfg as _cfg
@@ -69,6 +70,76 @@ def roll(args):
             _chat(sock, "I don't know what to roll! Try specifying a die using something like: !roll 20")
         elif isinstance(e, ValueError):
             _chat(sock, "Pfff, it makes no sense to roll that. I'm not doing it.")
+
+
+def buydrink(args):
+    sock = args[0]
+    userName = args[1]
+    viewerDatabase = _getViewersDB()
+    currentPoints = viewerDatabase.search(_Query().name == userName)[0]['points']
+    try:
+        numberOfDrinks = int(args[2])
+    except(IndexError, ValueError) as e:
+        if isinstance(e, IndexError):
+            _chat(sock, "The bartender doesn't know how many drinks you want to buy! Try saying something like: !buydrink <number> <recipient>")
+        elif isinstance(e, ValueError):
+            _chat(sock, "The bartender looks at you quizzically. Try saying something like !buydrink <number> <recipient>")
+        return 0
+    viewersRequested = args[3:]
+    if len(viewersRequested) == 0:
+        viewersToBuyFor = [userName]
+        cannotFind = []
+    else:
+        viewerList = []
+        viewersToBuyFor = []
+        cannotFind = []
+        attempts = 0
+        while viewerList is not None:
+            viewerList = _getViewerList()
+            attempts += 1
+            if attempts == 10:
+                _chat(sock, "The bartender is busy serving someone else. Try again shortly!")
+                return 0
+        for viewer in viewersRequested:
+            if viewer == 'all':
+                viewersToBuyFor = viewerList
+                break
+            if viewer in viewerList:
+                viewersToBuyFor.append(viewer)
+            else:
+                cannotFind.append(viewer)
+        if len(cannotFind) == 1:
+            _chat(sock, "The bartender looks around but cannot see " +\
+                 cannotFind[0] + "!")
+        elif len(cannotFind) == len(viewersToBuyFor):
+            _chat(sock, "The bartender looks around but cannot see " +\
+                 "any of the people you'd like to buy drinks for!")
+            return 0
+        elif len(cannotFind) == 2:
+            _chat(sock, "The bartender looks around but cannot see " +\
+                 cannotFind[0] + " or " + cannotFind[1] + "!")
+        elif len(cannotFind) > 2:
+            _chat(sock, "The bartender looks around but cannot see " +\
+                  ", ".join(cannotFind[:-1]) + ", or " + cannotFind[-1] + "!")
+    if len(viewersToBuyFor) == 0:
+        return 0
+    totalCost = numberOfDrinks * (len(viewersToBuyFor) * _cfg.drinksCost)
+    if currentPoints < totalCost:
+        _chat(sock, "Sorry, " + userName + ", but you do not have " + str(totalCost) + " " + _cfg.currencyName + "s to buy that many drinks!")
+    else:
+        _chat(sock, userName + " gives " + str(totalCost) + " " +\
+              _cfg.currencyName + " to the barman.")
+        if viewersRequested[0] == 'all':
+            _chat(sock, "Drinks for everyone courtesy of " + userName + "!")
+
+#!buydrink <numDrinks> [ <username0> ( <username1> <username2> ) | "all" ]
+#<numDrinks> - The number of drinks to buy at ?? blaskoins per drink.
+#<username0>, <username1>, etc - User(s) to buy drink(s) for. May increase the drink counter for each person mentioned by the amount bought.
+#"all" - triggers "<numDrinks> Rounds for everyone! Courtesy of [user triggering command]!"
+#
+#!drink ( <numDrinks> )
+#<numDrinks> - Number of drinks to drink. If greater than a number within reason, cancel drink and warn user. Else decrease drinks counter for user by requested amount with message of how much they drank. If omitted, defaults to 0.
+
 
 
 def schedule(args):
