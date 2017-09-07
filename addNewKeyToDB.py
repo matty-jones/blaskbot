@@ -3,21 +3,25 @@ import tinydb.operations as dbop
 
 if __name__ == "__main__":
     # Which database would you like to update?
-    databaseName = './databases/tempDB.db'
+    databaseName = './databases/blaskatronicViewers.db'
     # Put the new properties you'd like to add to the database here as the keys in
     # the dictionary, and then assign some default values to those keys.
-    newPropertiesToAdd = {'lurker': False, 'wobbey': 0}
+    newPropertiesToAdd = {'drinkExpiry': None, 'drinks': 0}
 
 
     # The following code will add those properties and their default values to
     # any elements in the database that don't already have they key.
-    db = TinyDB('./tempDB.db')
+    db = TinyDB(databaseName)
     allElements = db.search(Query().name.exists())
     for propertyToAdd in newPropertiesToAdd.keys():
         for element in allElements:
             if element in db.search(Query().propertyToAdd.exists()):
                 continue
-            db.update(dbop.set(propertyToAdd, newPropertiesToAdd[propertyToAdd]), Query().name == element['name'])
+            if propertyToAdd == 'totalPoints':
+                value = db.search(Query().name == element['name'])[0]['points']
+                db.update(dbop.set(propertyToAdd, value), Query().name == element['name'])
+            else:
+                db.update(dbop.set(propertyToAdd, newPropertiesToAdd[propertyToAdd]), Query().name == element['name'])
 
 
     # ---=== DEBUG LINES ===---
