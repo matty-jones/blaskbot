@@ -151,11 +151,39 @@ def buydrink(args):
                   " drinks!")
 
 
-#def drink(args):
-#    sock = args[0]
-#    userName = args[1]
-#    try:
-#        numberOfDrinks = int(args[2])
+def drink(args):
+    sock = args[0]
+    userName = args[1]
+    try:
+        numberOfDrinks = int(args[2])
+        if numberOfDrinks > 5:
+            _chat(sock, "That's way too many drinks to have all at once! You'll be chundering " +\
+                 "everywhere!")
+            return 0
+        viewerDatabase = _getViewersDB()
+        totalNumberAllowed = viewerDatabase.search(Query().name == userName)[0]['drinks']
+        if totalNumberAllowed == 0:
+            _chat(sock, "You don't have any drinks, " + userName + "! Maybe a kind soul will buy you one...")
+            return 0
+        if numberOfDrinks > totalNumberAllowed:
+            _chat(sock, "You only have " + str(totalNumberAllowed) + " drinks in front of you, " +\
+                  userName + "!")
+            return 0
+        drinkString = userName + " takes a deep breath and then downs a drink"
+        if numberOfDrinks > 1:
+            drinkString += "...or " + str(numberOfDrinks) + "! It doesn't do anything yet except make you feel woozy..."
+        else:
+            drinkString += "! It doesn't do anything yet except make you feel woozy..."
+        _chat(sock, drinkString)
+        viewerDatabase.update(_tdbo.subtract('drinks', numberOfDrinks), \
+                              Query().name == userName)
+    except (IndexError, ValueError) as e:
+        if isinstance(e, IndexError):
+            _chat(sock, "I don't know how many drinks you'd like to drink! Try specifying with !drink 2")
+        if isinstance(e, ValueError):
+            _chat(sock, "You can't drink that!")
+
+
 
 
 
