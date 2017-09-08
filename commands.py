@@ -129,8 +129,35 @@ def buydrink(args):
     else:
         _chat(sock, userName + " gives " + str(totalCost) + " " +\
               _cfg.currencyName + " to the barman.")
+        viewerDatabase.update(_tdbo.subtract('points', totalCost), \
+                              Query().name == userName)
         if viewersRequested[0] == 'all':
+            for viewer in viewerList:
+                viewerDatabase.update(_tdbo.add('drinks', numberOfDrinks), \
+                                      Query().name == viewer)
             _chat(sock, "Drinks for everyone courtesy of " + userName + "!")
+        else:
+            viewersString = ""
+            for viewer in viewersToBuyFor:
+                viewerDatabase.update(_tdbo.add('drinks', numberOfDrinks), \
+                                      Query().name == viewer)
+                if len(viewersToBuyFor) == 0:
+                    viewersString += viewer
+                elif viewer == viewersToBuyFor[-1]:
+                    viewersString += " and " + viewer
+                else:
+                    viewersString += ", " + viewer
+            _chat(sock, userName + " just bought " + viewerString + " " + str(numberOfDrinks) +\
+                  " drinks!")
+
+
+#def drink(args):
+#    sock = args[0]
+#    userName = args[1]
+#    try:
+#        numberOfDrinks = int(args[2])
+
+
 
 #!buydrink <numDrinks> [ <username0> ( <username1> <username2> ) | "all" ]
 #<numDrinks> - The number of drinks to buy at ?? blaskoins per drink.
