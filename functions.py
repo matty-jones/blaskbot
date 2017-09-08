@@ -57,18 +57,18 @@ def hostChat(hostSock, stdin):
     sys.stdin = stdin
     while True:
         message = input("Send as " + cfg.JOIN + ": ")
-        print("MESSAGE RECEIVED, SENDING IT TO THE IRC")
-        chat(hostSock, message)
+        chat(hostSock, message, sendType='host')
 
 
-def chat(sock, msg):
+def chat(sock, msg, sendType='bot'):
     '''
     Sends a chat message to the server.
     Inputs:
         sock -- The socket over which to send the message
         msg -- (str) The message to send
     '''
-    msg = "/me : " + msg
+    if sendType == 'bot':
+        msg = "/me : " + msg
     printv("Sending message '" + msg + "' to chat server...", 5)
     sock.send("PRIVMSG #{} :{}\r\n".format(cfg.JOIN, msg).encode('utf-8'))
 
