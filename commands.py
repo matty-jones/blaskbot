@@ -79,29 +79,22 @@ def buydrink(args):
     currentPoints = viewerDatabase.search(_Query().name == userName)[0]['points']
     try:
         numberOfDrinks = int(args[2])
+        viewersRequested = args[3:]
         if numberOfDrinks <= 0:
             raise IndexError
     except(IndexError, ValueError) as e:
-        if isinstance(e, IndexError):
-            _chat(sock, "The bartender doesn't know how many drinks you want to buy, but begins pouring you a drink anyway.")
-            numberOfDrinks = 1
-        elif isinstance(e, ValueError):
-            _chat(sock, "The bartender looks at you quizzically. Try saying something like !buydrink <number> <recipient>")
-            return 0
-    viewersRequested = args[3:]
+        _chat(sock, "The bartender doesn't know how many drinks you want to buy, but begins pouring you a drink anyway.")
+        numberOfDrinks = 1
+        viewersRequested = args[2:]
     if len(viewersRequested) == 0:
         viewersToBuyFor = [userName]
         cannotFind = []
-    elif viewersRequested == 'all':
-        viewersToBuyFor = 'all'
     else:
         viewerList = []
-        viewersToBuyFor = []
-        cannotFind = []
         attempts = 0
         while len(viewerList) == 0:
             viewerJSON = _getViewerList()
-            viewerList = [viewerJSON for nameRank in [viewerJSON['chatters'][x] \
+            viewerList = [viewerName for nameRank in [viewerJSON['chatters'][x] \
                                         for x in viewerJSON['chatters'].keys()] for viewerName \
                                         in nameRank]
             print(viewerList)
@@ -109,9 +102,14 @@ def buydrink(args):
             if attempts == 10:
                 _chat(sock, "The bartender is busy serving someone else. Try again shortly!")
                 return 0
+    if 'all' in viewersRequested:
+        viewersToBuyFor = viewerList
+    else:
+        viewersToBuyFor = []
+        cannotFind = []
         for viewer in viewersRequested: # Put in a .lower here?
-            if viewer in viewerList:
-                viewersToBuyFor.append(viewer)
+            if viewer.lower() in viewerList:
+                viewersToBuyFor.append(viewer.lower())
             else:
                 cannotFind.append(viewer)
         if len(cannotFind) == 1:
@@ -133,36 +131,32 @@ def buydrink(args):
     if currentPoints < totalCost:
         _chat(sock, "Sorry, " + userName + ", but you do not have " + str(totalCost) + " " + _cfg.currencyName + "s to buy that many drinks!")
     else:
-        _chat(sock, userName + " gives " + str(totalCost) + " " +\
-              _cfg.currencyName + "s to the bartender.")
+        giveMoneyString = userName + " gives " + str(totalCost) + " " +\
+              _cfg.currencyName + "s to the bartender"
         viewerDatabase.update(_tdbo.subtract('points', totalCost), \
                               _Query().name == userName)
-        if viewersToBuyFor[0] == 'all':
+        if viewersToBuyFor == 'all':
             for viewer in viewerList:
                 viewerDatabase.update(_tdbo.add('drinks', numberOfDrinks), \
                                       _Query().name == viewer)
-            _chat(sock, "Drinks for everyone courtesy of " + userName + "!")
+            _chat(sock, giveMoneyString + ". Drinks for everyone!")
         else:
-            viewersString = ""
+            viewersString = viewersToBuyFor[0]
+            if len(viewersToBuyFor) > 1:
+                for viewer in viewersToBuyFor[1:]:
+                    if viewer == viewersToBuyFor[-1]:
+                        viewersString += " and " + viewer
+                    else:
+                        viewersString += ", " + viewer
+            viewersString = _re.sub(r'\b' + userName + r'\b', 'themself', viewersString)
             for viewer in viewersToBuyFor:
                 viewerDatabase.update(_tdbo.add('drinks', numberOfDrinks), \
                                       _Query().name == viewer)
-                if len(viewersToBuyFor) == 0:
-                    viewersString += viewer
-                elif len(viewersToBuyFor) == 1:
-                    if viewersToBuyFor[0] == userName:
-                        viewersString = "themself"
-                    else:
-                        viewersString = viewersToBuyFor[0]
-                elif viewer == viewersToBuyFor[-1]:
-                    viewersString += " and " + viewer
-                else:
-                    viewersString += ", " + viewer
             if numberOfDrinks == 1:
                 drinkString = "a drink"
             else:
                 drinkString = str(numberOfDrinks) + " drinks"
-            _chat(sock, userName + " just bought " + viewersString + " " + drinkString + "!")
+            _chat(sock, giveMoneyString + " to buy " + viewersString + " " + drinkString + "!")
 
 
 def drink(args):
