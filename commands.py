@@ -311,7 +311,7 @@ def blaskoins(args):
     userName = args[1]
     viewerDB = _getViewersDB()
     try:
-        currentPoints = viewerDB.search(_Query().name == userName)[0]['totalPoints']
+        currentPoints = viewerDB.search(_Query().name == userName)[0]['points']
         currencyUnits = _cfg.currencyName
         if currentPoints > 1:
             currencyUnits += "s"
