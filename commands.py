@@ -79,31 +79,37 @@ def buydrink(args):
     currentPoints = viewerDatabase.search(_Query().name == userName)[0]['points']
     try:
         numberOfDrinks = int(args[2])
+        if numberOfDrinks <= 0:
+            raise IndexError
     except(IndexError, ValueError) as e:
         if isinstance(e, IndexError):
-            _chat(sock, "The bartender doesn't know how many drinks you want to buy! Try saying something like: !buydrink <number> <recipient>")
+            _chat(sock, "The bartender doesn't know how many drinks you want to buy, but begins pouring you a drink anyway.")
+            numberOfDrinks = 1
         elif isinstance(e, ValueError):
             _chat(sock, "The bartender looks at you quizzically. Try saying something like !buydrink <number> <recipient>")
-        return 0
+            return 0
     viewersRequested = args[3:]
     if len(viewersRequested) == 0:
         viewersToBuyFor = [userName]
         cannotFind = []
+    elif viewersRequested == 'all':
+        viewersToBuyFor = 'all'
     else:
         viewerList = []
         viewersToBuyFor = []
         cannotFind = []
         attempts = 0
-        while viewerList is not None:
-            viewerList = _getViewerList()
+        while len(viewerList) == 0:
+            viewerJSON = _getViewerList()
+            viewerList = [viewerJSON for nameRank in [viewerJSON['chatters'][x] \
+                                        for x in viewerJSON['chatters'].keys()] for viewerName \
+                                        in nameRank]
+            print(viewerList)
             attempts += 1
             if attempts == 10:
                 _chat(sock, "The bartender is busy serving someone else. Try again shortly!")
                 return 0
-        for viewer in viewersRequested:
-            if viewer == 'all':
-                viewersToBuyFor = viewerList
-                break
+        for viewer in viewersRequested: # Put in a .lower here?
             if viewer in viewerList:
                 viewersToBuyFor.append(viewer)
             else:
@@ -128,27 +134,35 @@ def buydrink(args):
         _chat(sock, "Sorry, " + userName + ", but you do not have " + str(totalCost) + " " + _cfg.currencyName + "s to buy that many drinks!")
     else:
         _chat(sock, userName + " gives " + str(totalCost) + " " +\
-              _cfg.currencyName + " to the barman.")
+              _cfg.currencyName + "s to the bartender.")
         viewerDatabase.update(_tdbo.subtract('points', totalCost), \
-                              Query().name == userName)
-        if viewersRequested[0] == 'all':
+                              _Query().name == userName)
+        if viewersToBuyFor[0] == 'all':
             for viewer in viewerList:
                 viewerDatabase.update(_tdbo.add('drinks', numberOfDrinks), \
-                                      Query().name == viewer)
+                                      _Query().name == viewer)
             _chat(sock, "Drinks for everyone courtesy of " + userName + "!")
         else:
             viewersString = ""
             for viewer in viewersToBuyFor:
                 viewerDatabase.update(_tdbo.add('drinks', numberOfDrinks), \
-                                      Query().name == viewer)
+                                      _Query().name == viewer)
                 if len(viewersToBuyFor) == 0:
                     viewersString += viewer
+                elif len(viewersToBuyFor) == 1:
+                    if viewersToBuyFor[0] == userName:
+                        viewersString = "themself"
+                    else:
+                        viewersString = viewersToBuyFor[0]
                 elif viewer == viewersToBuyFor[-1]:
                     viewersString += " and " + viewer
                 else:
                     viewersString += ", " + viewer
-            _chat(sock, userName + " just bought " + viewerString + " " + str(numberOfDrinks) +\
-                  " drinks!")
+            if numberOfDrinks == 1:
+                drinkString = "a drink"
+            else:
+                drinkString = str(numberOfDrinks) + " drinks"
+            _chat(sock, userName + " just bought " + viewersString + " " + drinkString + "!")
 
 
 def drink(args):
@@ -156,35 +170,51 @@ def drink(args):
     userName = args[1]
     try:
         numberOfDrinks = int(args[2])
-        if numberOfDrinks > 5:
-            _chat(sock, "That's way too many drinks to have all at once! You'll be chundering " +\
-                 "everywhere!")
-            return 0
-        viewerDatabase = _getViewersDB()
-        totalNumberAllowed = viewerDatabase.search(Query().name == userName)[0]['drinks']
-        if totalNumberAllowed == 0:
-            _chat(sock, "You don't have any drinks, " + userName + "! Maybe a kind soul will buy you one...")
-            return 0
-        if numberOfDrinks > totalNumberAllowed:
-            _chat(sock, "You only have " + str(totalNumberAllowed) + " drinks in front of you, " +\
-                  userName + "!")
-            return 0
-        drinkString = userName + " takes a deep breath and then downs a drink"
-        if numberOfDrinks > 1:
-            drinkString += "...or " + str(numberOfDrinks) + "! It doesn't do anything yet except make you feel woozy..."
-        else:
-            drinkString += "! It doesn't do anything yet except make you feel woozy..."
-        _chat(sock, drinkString)
-        viewerDatabase.update(_tdbo.subtract('drinks', numberOfDrinks), \
-                              Query().name == userName)
     except (IndexError, ValueError) as e:
         if isinstance(e, IndexError):
-            _chat(sock, "I don't know how many drinks you'd like to drink! Try specifying with !drink 2")
-        if isinstance(e, ValueError):
+            numberOfDrinks = 1
+        elif isinstance(e, ValueError):
             _chat(sock, "You can't drink that!")
+            return 0
+    if numberOfDrinks > 5:
+        _chat(sock, "That's way too many drinks to have all at once! You'll be chundering " +\
+             "everywhere!")
+        return 0
+    viewerDatabase = _getViewersDB()
+    totalNumberAllowed = viewerDatabase.search(_Query().name == userName)[0]['drinks']
+    if totalNumberAllowed == 0:
+        _chat(sock, "You don't have any drinks, " + userName + "! Maybe a kind soul will buy you one...")
+        return 0
+    if numberOfDrinks > totalNumberAllowed:
+        if totalNumberAllowed == 1:
+            allowed = "1 drink"
+        else:
+            allowed = str(totalNumberAllowed) + " drinks"
+        _chat(sock, "You only have " + allowed + " drink in front of you, " + userName + "!")
+        return 0
+    drinkString = userName + " takes a deep breath and then downs a drink"
+    if numberOfDrinks > 1:
+        drinkString += "...or " + str(numberOfDrinks) + "! It doesn't do anything yet except make you feel woozy..."
+    else:
+        drinkString += "! It doesn't do anything yet except make you feel woozy..."
+    _chat(sock, drinkString)
+    viewerDatabase.update(_tdbo.subtract('drinks', numberOfDrinks), \
+                          _Query().name == userName)
 
 
-
+def drinks(args):
+    sock = args[0]
+    userName = args[1]
+    viewerDatabase = _getViewersDB()
+    numberOfDrinks = int(viewerDatabase.search(_Query().name == userName)[0]['drinks'])
+    if numberOfDrinks == 0:
+        _chat(sock, "You don't have any drinks, " + userName + "! Maybe a kind soul will buy you one...")
+        return 0
+    elif numberOfDrinks == 1:
+        drinkString = "1 drink"
+    else:
+        drinkString = str(numberOfDrinks) + " drinks"
+    _chat(sock, "You have " + drinkString + ", " + userName + "!")
 
 
 #!buydrink <numDrinks> [ <username0> ( <username1> <username2> ) | "all" ]
@@ -428,7 +458,8 @@ def slot(args):
     elif payout > 1:
         responseLine += " " + str(payout) + " " + _cfg.currencyName + "s clatter out" +\
                 " of the machine!"
-    viewerDatabase.update(_tdbo.add('points', -10 + payout), _Query().name == userName)
+    viewerDatabase.update(_tdbo.subtract('points', 10), _Query().name == userName)
+    viewerDatabase.update(_tdbo.add('points', payout), _Query().name == userName)
     _chat(sock, responseLine)
 
 
