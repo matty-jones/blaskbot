@@ -154,7 +154,8 @@ def threadUpdateDatabase(sock):
                         if len(viewerDatabase.search(Query().name == viewer)) == 0:
                             printv("Adding " + viewer + " to database...", 4)
                             viewerDatabase.insert({'name': viewer, 'points': 0, 'rank': 'None',
-                                                   'multiplier': 1, 'lurker': 'true', 'totalPoints': 0})
+                                                   'multiplier': 1, 'lurker': 'true', 'totalPoints': 0,
+                                                   'drinks': 0, 'drinkExpiry': None})
                         printv(viewer + " has " + str(viewerDatabase.search(Query().name ==\
                                 viewer)[0]['points']) + " points.", 5)
                         printv("Incrementing " + viewer + "'s points...", 4)
