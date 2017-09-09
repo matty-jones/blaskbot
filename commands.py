@@ -86,27 +86,26 @@ def buydrink(args):
         _chat(sock, "The bartender doesn't know how many drinks you want to buy, but begins pouring you a drink anyway.")
         numberOfDrinks = 1
         viewersRequested = args[2:]
-    if len(viewersRequested) == 0:
-        viewersToBuyFor = [userName]
-        cannotFind = []
-    else:
-        viewerList = []
-        attempts = 0
-        while len(viewerList) == 0:
-            viewerJSON = _getViewerList()
-            viewerList = [viewerName for nameRank in [viewerJSON['chatters'][x] \
-                                        for x in viewerJSON['chatters'].keys()] for viewerName \
-                                        in nameRank]
-            print(viewerList)
-            attempts += 1
-            if attempts == 10:
-                _chat(sock, "The bartender is busy serving someone else. Try again shortly!")
-                return 0
+    viewerList = []
+    attempts = 0
+    while len(viewerList) == 0:
+        viewerJSON = _getViewerList()
+        viewerList = [viewerName for nameRank in [viewerJSON['chatters'][x] \
+                                    for x in viewerJSON['chatters'].keys()] for viewerName \
+                                    in nameRank]
+        attempts += 1
+        if attempts == 10:
+            _chat(sock, "The bartender is busy serving someone else. Try again shortly!")
+            return 0
     if 'all' in viewersRequested:
         viewersToBuyFor = viewerList
     else:
+        if len(viewersRequested) == 0:
+            viewersRequested = [userName]
         viewersToBuyFor = []
         cannotFind = []
+        print("Requested =", viewersToBuyFor)
+        print("Online =", viewerList)
         for viewer in viewersRequested: # Put in a .lower here?
             if viewer.lower() in viewerList:
                 viewersToBuyFor.append(viewer.lower())
@@ -148,7 +147,7 @@ def buydrink(args):
                         viewersString += " and " + viewer
                     else:
                         viewersString += ", " + viewer
-            viewersString = _re.sub(r'\b' + userName + r'\b', 'themself', viewersString)
+            viewersString = _re.sub(r'\b' + userName + r'\b', 'themselves', viewersString)
             for viewer in viewersToBuyFor:
                 viewerDatabase.update(_tdbo.add('drinks', numberOfDrinks), \
                                       _Query().name == viewer)
@@ -164,6 +163,9 @@ def drink(args):
     userName = args[1]
     try:
         numberOfDrinks = int(args[2])
+        if numberOfDrinks <= 0:
+            _chat(sock, userName + " takes a deep breath and decides not to drink anything.")
+            return 0
     except (IndexError, ValueError) as e:
         if isinstance(e, IndexError):
             numberOfDrinks = 1
@@ -312,6 +314,7 @@ def blaskoins(args):
     viewerDB = _getViewersDB()
     try:
         currentPoints = viewerDB.search(_Query().name == userName)[0]['points']
+        totalPoints = viewerDB.search(_Query().name == userName)[0]['totalPoints']
         currencyUnits = _cfg.currencyName
         if currentPoints > 1:
             currencyUnits += "s"
@@ -322,9 +325,9 @@ def blaskoins(args):
         for rankPoints in _cfg.ranks.keys():
             nextRank = _cfg.ranks[rankPoints]
             pointsForNextRank = rankPoints
-            if currentPoints < rankPoints:
+            if totalPoints < rankPoints:
                 break
-        secondsToNextRank = (pointsForNextRank - currentPoints) * int(_cfg.awardDeltaT /\
+        secondsToNextRank = (pointsForNextRank - totalPoints) * int(_cfg.awardDeltaT /\
                                 (_cfg.pointsToAward * currentMultiplier))
         mins, secs = divmod(secondsToNextRank, 60)
         hours, mins = divmod(mins, 60)
