@@ -1,4 +1,4 @@
-# BlaskBot v0.7 #
+# BlaskBot v0.8 #
 
 
 The nascent stages of a custom-built fully-fledged Twitch bot.
@@ -18,10 +18,13 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 ## Current commands: ##
 * !bb: BEEP BOOP
 * !blaskoins: Outputs your current blaskoins and rank information
+* !buydrink: Buy a drink for yourself and your pals. Syntax: !buydrink <number> <users>. Defaults: 1, self.
 * !calc: CALCULATED
 * !clip: Outputs a random clip. Can also output a clip with specific ID (!clip <ID>) or from a specific viewer (!clip <VIEWER>), and mods can add clips using !clip add <SLUG> <AUTHOR>.
 * !dece: DECE
 * !discord: Outputs discord link
+* !drink: Take a drink! Don't go mad... Default 1.
+* !drinks: See how many drinks you have left.
 * !help: Outputs the list of commands that the user has permission to run
 * !roll X: rolls a dX for a random integer
 * !schedule: Outputs the schedule information
@@ -35,13 +38,11 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 
 ## To do: ##
 * Allow the streamer to update the title, game, and communities either from the cfg file or the bot terminal window
-* Add Gibu's !buydrinks command! Because everyone loves to get wasted during our streams.
 * Create the infrastructure for the jackpot in the !slot game
 * A !nextstream command to show when the next stream is and how long until it
 * !help functions for all commands (either !help <COMMAND> or !<COMMAND> help)
 * Notify on host, follow, sub
 * !duel-esque minigame for people to gamble BlasKoins on
-* !streamrank command that parses all streams for the current game and outputs the current rank based on viewers (maybe run this as a thread so that it keeps updating in the background for stats)
 
 
 ## Patch Notes: ##
@@ -58,6 +59,8 @@ v0.5: Added the clip database engine
 v0.6: Added the ability to send messages as the streamer through the bot, directly from the terminal
 
 v0.7: Created the !slot minigame
+
+v0.8: Incorporated the !drink system and stream rank functionality
 
 
 ## Installation Instructions: ##
