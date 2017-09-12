@@ -145,6 +145,7 @@ def threadUpdateDatabase(sock):
                                         in nameRank]
                 printv("Previous Viewers = " + repr(previousViewers), 4)
                 printv("Current Viewers = " + repr(flattenedViewerList), 4)
+                printv("Current Viewer Count = " + str(len(flattenedViewerList)), 1)
                 for viewer in flattenedViewerList:
                     if viewer in previousViewers:
                         printv(viewer + " in both lists. Adding "  + str(cfg.pointsToAward) +\
