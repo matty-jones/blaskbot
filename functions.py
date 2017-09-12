@@ -145,7 +145,10 @@ def threadUpdateDatabase(sock):
                                         in nameRank]
                 printv("Previous Viewers = " + repr(previousViewers), 4)
                 printv("Current Viewers = " + repr(flattenedViewerList), 4)
-                printv("Current Viewer Count = " + str(len(flattenedViewerList)), 1)
+                currentViewerCount = len(flattenedViewerList)
+                rankString = getStreamRank(currentViewerCount)
+                printv("Current Viewer Count = " + str(currentViewerCount) + " " +\
+                       rankString, 1)
                 for viewer in flattenedViewerList:
                     if viewer in previousViewers:
                         printv(viewer + " in both lists. Adding "  + str(cfg.pointsToAward) +\
@@ -214,6 +217,18 @@ def setAllToLurker():
     viewerDB.update(tdbo.set('lurker', 'true'), Query().name.exists())
 
 
+def getStreamRank(currentViewerCount):
+    currentGame = getCurrentGame()
+    if currentGame is not None:
+        returnString = getStreamsOfCurrentGame(currentGame, currentViewerCount)
+    else:
+        printv("No game found (check syntax)", 4)
+        return "No game found for stream rank."
+    if returnString is None:
+        return "Stream rank error."
+    return returnString
+
+
 def loadViewersDatabase():
     viewerDB = TinyDB('./databases/' + cfg.JOIN + 'Viewers.db')
     return viewerDB
@@ -244,6 +259,53 @@ def getViewerList():
     except:
         printv("Unexpected Error: " + repr(sys.exc_info()[0]), 2)
         return None
+
+
+def getCurrentGame():
+    try:
+        streamURL = "https://api.twitch.tv/kraken/channels/" + cfg.JOIN
+        streamData = request(viewerURL)
+        if "error" in streamData.keys():
+            raise URLError(response)
+        printv("Json loaded!", 5)
+        return streamData['channel']['game']
+    except URLError as e:
+        errorDetails = e.args[0]
+        printv("URLError with status " + errorDetails['status'] +
+               ", '" + errorDetails['error'] + "'!", 4)
+        printv("Error Message: " + errorDetails['message'], 4)
+        return None
+    except:
+        printv("Unexpected Error: " + repr(sys.exc_info()[0]), 2)
+        return None
+
+
+def getStreamsOfCurrentGame(game, currentViewers):
+    try:
+        streamsURL = "https://api.twitch.tv/kraken/streams/"
+        streamsData = request(streamsURL)
+        if "error" in streamsData.keys():
+            raise URLError(response)
+        printv("Json loaded!", 5)
+    except URLError as e:
+        errorDetails = e.args[0]
+        printv("URLError with status " + errorDetails['status'] +
+               ", '" + errorDetails['error'] + "'!", 4)
+        printv("Error Message: " + errorDetails['message'], 4)
+        return None
+    except:
+        printv("Unexpected Error: " + repr(sys.exc_info()[0]), 2)
+        return None
+    streamViewers = []
+    for stream in streamsData['streams']:
+        if stream['channel']['name'] != cfg.JOIN.lower():
+            streamViewers.append(stream['viewers'])
+    try:
+        streamViewers.sort(reverse=True)
+        rank = [streamViewers.index(x) for x in streamViewers if x < currentViewers][0] + 1
+    except IndexError:
+        rank = 1
+    return "Current Rank = " + str(rank) + " of " + str(len(streamViewers) + 1) + "."
 
 
 def isOp(user):

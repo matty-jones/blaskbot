@@ -459,7 +459,3 @@ def slot(args):
     viewerDatabase.update(_tdbo.add('points', payout), _Query().name == userName)
     _printv("Username = " + userName + ", Result = " + responseLine + ", Winnings = " + str(payout), 2)
     _chat(sock, responseLine)
-
-
-# TODO: Create an op-only command !streamrank that parses all streams for this game and outputs our current rank based on viewers.
-#       Extension: Run this as a thread and keep it updating in the background to keep track of rank over time
