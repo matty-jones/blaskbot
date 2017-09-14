@@ -451,6 +451,31 @@ def clip(args):
         _chat(sock, "The correct syntax is !clip, !clip #, or !clip <NAME>.")
 
 
+def pay(args):
+    sock = args[0]
+    userName = args[1]
+    viewerDatabase = _getViewersDB()
+    try:
+        userToPay = args[2]
+        amountToPay = int(args[3])
+        if amountToPay < 0:
+            raise IndexError
+        viewerJSON = _getViewerList()
+        viewerList = [viewerName for nameRank in [viewerJSON['chatters'][x] \
+                                    for x in viewerJSON['chatters'].keys()] for viewerName \
+                                    in nameRank]
+        if userToPay not in viewerList:
+            _chat(sock, "I don't see " + userToPay + " in chat!")
+            return 0
+        viewerDatabase.update(_tdbo.add('points', amountToPay), _Query().name == userToPay)
+        viewerDatabase.update(_tdbo.subtract('points', amountToPay), _Query().name == userName)
+        payString = userName + " very kindly gives " + userToPay + " " + str(amountToPay) + " of" +\
+             " their " + _cfg.currencyName + "s"
+        _chat(sock, payString + "!")
+    except:
+        _chat(sock, "The correct syntax: !pay <USERNAME> <AMOUNT>. There are no defaults!")
+
+
 def slot(args):
     sock = args[0]
     userName = args[1]
