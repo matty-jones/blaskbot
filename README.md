@@ -26,6 +26,8 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 * !drink: Take a drink! Don't go mad... Default 1.
 * !drinks: See how many drinks you have left.
 * !help: Outputs the list of commands that the user has permission to run
+* !pay: Allows a user to pay another user some currency: syntax only !pay <USERNAME> <NUMBER> with no defaults.
+* !rank: Like !blaskoins, but instead of outputting currency it tells you how long you've been watching for
 * !roll X: rolls a dX for a random integer
 * !schedule: Outputs the schedule information
 * !slot: Rolls the slot machine! Feelin' lucky, punk?
@@ -38,11 +40,14 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 
 ## To do: ##
 * Allow the streamer to update the title, game, and communities either from the cfg file or the bot terminal window
+* Integrate with Discord
+* Achievements engine and all the achievements from the pinned messages on the robotics-facility
 * Create the infrastructure for the jackpot in the !slot game
 * A !nextstream command to show when the next stream is and how long until it
 * !help functions for all commands (either !help <COMMAND> or !<COMMAND> help)
 * Notify on host, follow, sub
 * !duel-esque minigame for people to gamble BlasKoins on
+* `Jukebox' feature where players can spend currency to change the song
 
 
 ## Patch Notes: ##
