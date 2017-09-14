@@ -264,11 +264,12 @@ def getViewerList():
 def getCurrentGame():
     try:
         streamURL = "https://api.twitch.tv/kraken/channels/" + cfg.JOIN
-        streamData = request(viewerURL)
+        streamData = request(streamURL)
+        print(streamData)
         if "error" in streamData.keys():
             raise URLError(response)
         printv("Json loaded!", 5)
-        return streamData['channel']['game']
+        return streamData['game']
     except URLError as e:
         errorDetails = e.args[0]
         printv("URLError with status " + errorDetails['status'] +
@@ -276,7 +277,7 @@ def getCurrentGame():
         printv("Error Message: " + errorDetails['message'], 4)
         return None
     except:
-        printv("Unexpected Error: " + repr(sys.exc_info()[0]), 2)
+        printv("UNEXPECTED ERROR: " + repr(sys.exc_info()[0]), 2)
         return None
 
 
@@ -302,7 +303,13 @@ def getStreamsOfCurrentGame(game, currentViewers):
             streamViewers.append(stream['viewers'])
     try:
         streamViewers.sort(reverse=True)
-        rank = [streamViewers.index(x) for x in streamViewers if x < currentViewers][0] + 1
+        rank = 1
+        for viewerCount in streamViewers:
+            if viewerCount > currentViewers:
+                rank += 1
+            else:
+                break
+        #rank = [streamViewers.index(x) for x in streamViewers if x < currentViewers][0] + 1
     except IndexError:
         rank = 1
     return "Current Rank = " + str(rank) + " of " + str(len(streamViewers) + 1) + "."
