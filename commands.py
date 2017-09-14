@@ -213,16 +213,6 @@ def drinks(args):
     _chat(sock, "You have " + drinkString + ", " + userName + "!")
 
 
-#!buydrink <numDrinks> [ <username0> ( <username1> <username2> ) | "all" ]
-#<numDrinks> - The number of drinks to buy at ?? blaskoins per drink.
-#<username0>, <username1>, etc - User(s) to buy drink(s) for. May increase the drink counter for each person mentioned by the amount bought.
-#"all" - triggers "<numDrinks> Rounds for everyone! Courtesy of [user triggering command]!"
-#
-#!drink ( <numDrinks> )
-#<numDrinks> - Number of drinks to drink. If greater than a number within reason, cancel drink and warn user. Else decrease drinks counter for user by requested amount with message of how much they drank. If omitted, defaults to 0.
-
-
-
 def schedule(args):
     sock = args[0]
     _chat(sock, "Blaskatronic TV goes live at 2:30am UTC on Wednesdays and Fridays and 5:30pm UTC on Saturdays!")
@@ -353,6 +343,64 @@ def blaskoins(args):
               " data for you yet! Please try again later (and also welcome to the stream ;)).")
 
 
+def rank(args):
+    sock = args[0]
+    userName = args[1]
+    viewerDB = _getViewersDB()
+    try:
+        totalPoints = viewerDB.search(_Query().name == userName)[0]['totalPoints']
+        currentRank = viewerDB.search(_Query().name == userName)[0]['rank']
+        currentMultiplier = viewerDB.search(_Query().name == userName)[0]['multiplier']
+        nextRank = None
+        pointsForNextRank = None
+        for rankPoints in _cfg.ranks.keys():
+            nextRank = _cfg.ranks[rankPoints]
+            pointsForNextRank = rankPoints
+            if totalPoints < rankPoints:
+                break
+        secondsToNextRank = (pointsForNextRank - totalPoints) * int(_cfg.awardDeltaT /\
+                                (_cfg.pointsToAward * currentMultiplier))
+        totalSecondsSoFar = totalPoints * int(_cfg.awardDeltaT / _cfg.pointsToAward)
+        print(totalSecondsSoFar)
+        totalMins, totalSecs = divmod(totalSecondsSoFar, 60)
+        print(totalMins, totalSecs)
+        totalHours, totalMins = divmod(totalMins, 60)
+        print(totalHours, totalMins, totalSecs)
+        totalTimeDict = {'hour': int(totalHours), 'minute': int(totalMins), 'second': int(totalSecs)}
+        totalTimeArray = []
+        mins, secs = divmod(secondsToNextRank, 60)
+        hours, mins = divmod(mins, 60)
+        timeDict = {'hour': int(hours), 'minute': int(mins), 'second': int(secs)}
+        timeArray = []
+        for key, value in totalTimeDict.items():
+            if value > 1:
+                totalTimeArray.append(str(value) + " " + str(key) + "s")
+            elif value > 0:
+                totalTimeArray.append(str(value) + " " + str(key))
+        totalTime = ' and '.join(totalTimeArray[-2:])
+        if len(totalTimeArray) == 3:
+            totalTime = totalTime[0] + ", " + totalTime
+        for key, value in timeDict.items():
+            if value > 1:
+                timeArray.append(str(value) + " " + str(key) + "s")
+            elif value > 0:
+                timeArray.append(str(value) + " " + str(key))
+        timeToNext = ' and '.join(timeArray[-2:])
+        if len(timeArray) == 3:
+            timeToNext = timeToNext[0] + ", " + timeToNext
+        rankMod = ' '
+        if currentRank[0] in ['a', 'e', 'i', 'o', 'u']:
+            rankMod = 'n '
+        outputLine = userName + " has currently watched for " + totalTime +\
+                " and is a" + rankMod + str(currentRank) +\
+                " (" + timeToNext + " until next rank!)"
+        _chat(sock, outputLine)
+    except IndexError:
+        _chat(sock, "I'm sorry, " + userName + ", but I don't have any rank" +\
+              " data for you yet! Please try again later (and also welcome to the stream ;)).")
+
+
+
 def clip(args):
     sock = args[0]
     additionalArgs = args[1:]
@@ -451,10 +499,10 @@ def slot(args):
         # TODO Add the game keys to the database
     if payout == 1:
         responseLine += " A single" + _cfg.currencyName + " clatters out" +\
-                " of the machine!"
+                " of the machine for " + userName + "!"
     elif payout > 1:
         responseLine += " " + str(payout) + " " + _cfg.currencyName + "s clatter out" +\
-                " of the machine!"
+                " of the machine for " + userName + "!"
     viewerDatabase.update(_tdbo.subtract('points', 10), _Query().name == userName)
     viewerDatabase.update(_tdbo.add('points', payout), _Query().name == userName)
     _printv("Username = " + userName + ", Result = " + responseLine + ", Winnings = " + str(payout), 2)
