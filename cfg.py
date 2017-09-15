@@ -9,6 +9,7 @@ NICK = os.getenv("BOTNICK")  # The bot's name! Must match the twitch account ass
 JOIN = os.getenv("BOTCHAT")  # The channel BlaskBot is to look after (your twitch account name).
 PASS = os.getenv("BOTAUTH")  # The OAuth for the bot's twitch account (needed so the bot can chat).
 HOSTPASS = os.getenv("HOSTAUTH")  # The OAuth for the host's twitch account (needed for channel SET updates)
+DISCORDPASS = os.getenv("DISCORDAUTH")  # The Token for the discord bot app
 RATE = 1  # Messages per second - Don't reduce this below 1 or your bot will get banned.
 VERB = 5  # Verbosity of outputs while the bot is running (1 - 5).
 
@@ -71,3 +72,4 @@ slotCost = 10
 slotPayout = {0: 0, 1: 100, 2: 5, 3: 70, 4: 2500} # The keys correspond to the
                     # number of matches. 1 here indicates 2x2 stop matches
 slotJackpot = ['Squid1', 'Squid2', 'Squid3', 'Squid4']
+drinksCost = 5
