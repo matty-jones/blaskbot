@@ -1,4 +1,4 @@
-# BlaskBot v0.8 #
+# BlaskBot v0.9 #
 
 
 The nascent stages of a custom-built fully-fledged Twitch bot.
@@ -13,6 +13,7 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 * Connection to twitch and twitter APIs
 * `Lurker Protection' - the bot won't call you out in chat until you've sent at least one message during the stream!
 * The ability to send messages as the channel host/streamer through the bot, directly from the terminal
+* Discord integration!
 
 
 ## Current commands: ##
@@ -40,7 +41,6 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 
 ## To do: ##
 * Allow the streamer to update the title, game, and communities either from the cfg file or the bot terminal window
-* Integrate with Discord
 * Achievements engine and all the achievements from the pinned messages on the robotics-facility
 * Create the infrastructure for the jackpot in the !slot game
 * A !nextstream command to show when the next stream is and how long until it
@@ -66,6 +66,8 @@ v0.6: Added the ability to send messages as the streamer through the bot, direct
 v0.7: Created the !slot minigame
 
 v0.8: Incorporated the !drink system and stream rank functionality
+
+v0.9: Integrated with the discord API. Status and chat functions available, no minigames. Also no synchronicity with the twitch bot yet.
 
 
 ## Installation Instructions: ##
