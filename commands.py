@@ -104,8 +104,6 @@ def buydrink(args):
             viewersRequested = [userName]
         viewersToBuyFor = []
         cannotFind = []
-        print("Requested =", viewersToBuyFor)
-        print("Online =", viewerList)
         for viewer in viewersRequested: # Put in a .lower here?
             if viewer.lower() in viewerList:
                 viewersToBuyFor.append(viewer.lower())
@@ -361,11 +359,8 @@ def rank(args):
         secondsToNextRank = (pointsForNextRank - totalPoints) * int(_cfg.awardDeltaT /\
                                 (_cfg.pointsToAward * currentMultiplier))
         totalSecondsSoFar = totalPoints * int(_cfg.awardDeltaT / _cfg.pointsToAward)
-        print(totalSecondsSoFar)
         totalMins, totalSecs = divmod(totalSecondsSoFar, 60)
-        print(totalMins, totalSecs)
         totalHours, totalMins = divmod(totalMins, 60)
-        print(totalHours, totalMins, totalSecs)
         totalTimeDict = {'hour': int(totalHours), 'minute': int(totalMins), 'second': int(totalSecs)}
         totalTimeArray = []
         mins, secs = divmod(secondsToNextRank, 60)
