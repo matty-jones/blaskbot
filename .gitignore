@@ -6,3 +6,4 @@ SENSITIVE*
 configurator.py
 *.db
 *.swo
+Images/*
