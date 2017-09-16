@@ -525,5 +525,5 @@ def slot(args):
                 " of the machine for " + userName + "!"
     viewerDatabase.update(_tdbo.subtract('points', 10), _Query().name == userName)
     viewerDatabase.update(_tdbo.add('points', payout), _Query().name == userName)
-    _printv("Username = " + userName + ", Result = " + responseLine + ", Winnings = " + str(payout), 2)
+    _printv("Username = " + userName + ", Result = " + responseLine + ", Winnings = " + str(payout), 1)
     _chat(sock, responseLine)

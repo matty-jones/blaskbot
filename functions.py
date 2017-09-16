@@ -70,7 +70,10 @@ def chat(sock, msg, sendType='bot'):
     if sendType == 'bot':
         msg = "/me : " + msg
     printv("Sending message '" + msg + "' to chat server...", 5)
-    sock.send("PRIVMSG #{} :{}\r\n".format(cfg.JOIN, msg).encode('utf-8'))
+    try:
+        sock.send("PRIVMSG #{} :{}\r\n".format(cfg.JOIN, msg).encode('utf-8'))
+    except:
+        printv("ERROR MESSAGE NOT SENT", 1)
 
 
 def ban(sock, user):
@@ -265,7 +268,6 @@ def getCurrentGame():
     try:
         streamURL = "https://api.twitch.tv/kraken/channels/" + cfg.JOIN
         streamData = request(streamURL)
-        print(streamData)
         if "error" in streamData.keys():
             raise URLError(response)
         printv("Json loaded!", 5)
@@ -348,9 +350,8 @@ def request(URL, header=headers):
 
 
 def put(URL, dataDict, header=headers):
-    print("Sending " + repr(dataDict) + " to URL: '" + URL + "'...", 4)
+    printv("Sending " + repr(dataDict) + " to URL: '" + URL + "'...", 4)
     req = requests.put(URL, data=dataDict, headers=header)
-    print(req.url)
 
 
 def incrementNumberOfChatMessages():
