@@ -4,7 +4,7 @@ from discord.ext import commands
 import random as R
 from functions import loadClipsDatabase as getClipsDB
 from functions import loadViewersDatabase as getViewersDB
-from tinydb import Query
+from tinydb import TinyDB, Query
 
 commandPrefix = "!"
 client = commands.Bot(command_prefix=commandPrefix)
@@ -49,6 +49,10 @@ async def blaskoins(context):
     userName = context.message.author.display_name.lower()
     userNameCap = context.message.author.display_name
     viewerDB = getViewersDB()
+    discordDB = TinyDB('./databases/discordNames.db')
+    twitchUserName = discordDB.search(Query().discordName == userName)
+    if len(twitchUserName) > 0:
+        userName = twitchUserName[0]['twitchName']
     try:
         currentPoints = viewerDB.search(Query().name == userName)[0]['points']
         totalPoints = viewerDB.search(Query().name == userName)[0]['totalPoints']
@@ -81,7 +85,7 @@ async def blaskoins(context):
         rankMod = ' '
         if currentRank[0] in ['a', 'e', 'i', 'o', 'u']:
             rankMod = 'n '
-        outputLine = "You, " + userNameCap + ", currently have " + str(currentPoints) + " " +\
+        outputLine = "On your twitch account, " + userNameCap + ", you currently have " + str(currentPoints) + " " +\
                 str(currencyUnits) + " and are a" + rankMod + str(currentRank) +\
                 " (" + timeToNext + " until next rank!)"
         await client.say(outputLine)
@@ -96,6 +100,10 @@ async def rank(context):
     userName = context.message.author.display_name.lower()
     userNameCap = context.message.author.display_name
     viewerDB = getViewersDB()
+    discordDB = TinyDB('./databases/discordNames.db')
+    twitchUserName = discordDB.search(Query().discordName == userName)
+    if len(twitchUserName) > 0:
+        userName = twitchUserName[0]['twitchName']
     try:
         totalPoints = viewerDB.search(Query().name == userName)[0]['totalPoints']
         currentRank = viewerDB.search(Query().name == userName)[0]['rank']
@@ -137,7 +145,7 @@ async def rank(context):
         rankMod = ' '
         if currentRank[0] in ['a', 'e', 'i', 'o', 'u']:
             rankMod = 'n '
-        outputLine = "You, " + userNameCap + ", have currently watched the stream for " + totalTime +\
+        outputLine = "On your twitch account, " + userNameCap + ", you have currently watched the stream for " + totalTime +\
                 " and are a" + rankMod + str(currentRank) +\
                 " (" + timeToNext + " until next rank!)"
         await client.say(outputLine)
@@ -151,6 +159,10 @@ async def drinks(context):
     userName = context.message.author.display_name.lower()
     userNameCap = context.message.author.display_name
     viewerDatabase = getViewersDB()
+    discordDB = TinyDB('./databases/discordNames.db')
+    twitchUserName = discordDB.search(Query().discordName == userName)
+    if len(twitchUserName) > 0:
+        userName = twitchUserName[0]['twitchName']
     numberOfDrinks = int(viewerDatabase.search(Query().name == userName)[0]['drinks'])
     if numberOfDrinks == 0:
         await client.say("You don't have any drinks to use on stream, " + userNameCap + "! Maybe a kind soul will buy you one...")
@@ -159,7 +171,7 @@ async def drinks(context):
         drinkString = "1 drink"
     else:
         drinkString = str(numberOfDrinks) + " drinks"
-    await client.say("You have " + drinkString + " to enjoy on stream, " + userNameCap + "!")
+    await client.say("On your twitch account, you have " + drinkString + " to enjoy on stream, " + userNameCap + "!")
 
 
 @client.command(pass_context=True)
@@ -170,3 +182,8 @@ async def schedule(context):
 
 def execute():
     client.run(cfg.DISCORDPASS)
+
+
+if __name__ == "__main__":
+    client.run(cfg.DISCORDPASS)
+
