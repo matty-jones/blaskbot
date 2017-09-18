@@ -85,9 +85,8 @@ async def blaskoins(context):
         rankMod = ' '
         if currentRank[0] in ['a', 'e', 'i', 'o', 'u']:
             rankMod = 'n '
-        outputLine = "On your twitch account, " + userNameCap + ", you currently have " + str(currentPoints) + " " +\
-                str(currencyUnits) + " and are a" + rankMod + str(currentRank) +\
-                " (" + timeToNext + " until next rank!)"
+        outputLine = "On your twitch account, " + userNameCap + ", you currently have " + str(currentPoints) +\
+                " " + str(currencyUnits) + "!"
         await client.say(outputLine)
     except IndexError:
         await client.say(sock, "I'm sorry, " + userNameCap + ", but I don't have any " + _cfg.currencyName +\
