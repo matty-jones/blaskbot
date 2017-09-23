@@ -423,7 +423,7 @@ def clip(args):
     elif len(additionalArgs) == 2:
         try:
             clipNo = int(additionalArgs[1]) + 1
-            if (clipNo > 0) and (clipNo <= len(clipDB)):
+            if (clipNo > -len(clipDB)) and (clipNo <= len(clipDB)):
                 url = "https://clips.twitch.tv/" + clipDB.get(eid=clipNo)['url']
                 _printv("Clip request: " + url, 4)
                 _chat(sock, "Here is clip #" + str(clipNo - 1) + ": " + url)
