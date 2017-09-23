@@ -332,7 +332,7 @@ def blaskoins(args):
         rankMod = ' '
         if currentRank[0] in ['a', 'e', 'i', 'o', 'u']:
             rankMod = 'n '
-        outputLine = userName + " currently has " + str(currentPoints) + " " + str(currentyUnits) + "!"
+        outputLine = userName + " currently has " + str(currentPoints) + " " + str(currencyUnits) + "!"
         _chat(sock, outputLine)
     except IndexError:
         _chat(sock, "I'm sorry, " + userName + ", but I don't have any " + _cfg.currencyName +\
