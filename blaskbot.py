@@ -62,30 +62,34 @@ def main():
         if response == "PING :tmi.twitch.tv\r\n":
             botComm.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
         else:
-            username = re.search(r"\w+", response).group(0)
+            try:
+                username = re.search(r"\w+", response).group(0)
+            except AttributeError:
+                continue
             functions.updateLurkerStatus(username)
             message = CHAT_MSG.sub("", response)
             functions.printv(username + ": " + message, 1)
-            if message.strip()[0] == "!":
-                # A command has been issued
-                fullMessage = message.strip().split(' ')
-                command = fullMessage[0][1:]
-                username = response[response.index(':') + 1: response.index('!')]
-                arguments = [botComm, username] + fullMessage[1:]
-                try:
-                    getattr(commands, command)(arguments)
-                except AttributeError as e:
-                    functions.printv(e, 4)
-                    functions.printv("No function by the name " + command + "!", 4)
-            else:
-                # Increment the number of sent messages
-                if username.lower() not in ['tmi', cfg.NICK.lower(), cfg.JOIN.lower()]:
-                    functions.incrementNumberOfChatMessages()
-                    # Read chat and execute commands based on what people are talking about
-                    if "discord" in message.lower():
-                        getattr(commands, 'discord')([botComm, username])
-                    elif "twitter" in message.lower():
-                        getattr(commands, 'twitter')([botComm, username])
+            if len(message) > 0:
+                if message.strip()[0] == "!":
+                    # A command has been issued
+                    fullMessage = message.strip().split(' ')
+                    command = fullMessage[0][1:]
+                    username = response[response.index(':') + 1: response.index('!')]
+                    arguments = [botComm, username] + fullMessage[1:]
+                    try:
+                        getattr(commands, command)(arguments)
+                    except AttributeError as e:
+                        functions.printv(e, 4)
+                        functions.printv("No function by the name " + command + "!", 4)
+                else:
+                    # Increment the number of sent messages
+                    if username.lower() not in ['tmi', cfg.NICK.lower(), cfg.JOIN.lower()]:
+                        functions.incrementNumberOfChatMessages()
+                        # Read chat and execute commands based on what people are talking about
+                        if "discord" in message.lower():
+                            getattr(commands, 'discord')([botComm, username])
+                        elif "twitter" in message.lower():
+                            getattr(commands, 'twitter')([botComm, username])
         # Sleep and then rerun loop
         T.sleep(1)
 
