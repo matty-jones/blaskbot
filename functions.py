@@ -67,11 +67,20 @@ def chat(sock, msg, sendType='bot'):
         sock -- The socket over which to send the message
         msg -- (str) The message to send
     '''
+    command = False
     if sendType == 'bot':
         msg = "/me : " + msg
-    printv("Sending message '" + msg + "' to chat server...", 5)
+    else:
+        if msg[0] == "!":
+            command = True
+    printv(sendType + ": " + msg, 1)
     try:
         sock.send("PRIVMSG #{} :{}\r\n".format(cfg.JOIN, msg).encode('utf-8'))
+        if command is True:
+            commandName = msg.split(' ')[0][1:]
+            # THIS DOESN'T WORK YET, FIX IT
+            exec("from commands import " + commandName + " as tempCommand")
+            tempCommand([sock, cfg.JOIN])
     except:
         printv("ERROR MESSAGE NOT SENT", 1)
 
@@ -285,7 +294,7 @@ def getCurrentGame():
 
 def getStreamsOfCurrentGame(game, currentViewers):
     try:
-        streamsURL = "https://api.twitch.tv/kraken/streams/"
+        streamsURL = "https://api.twitch.tv/kraken/streams/?game=" + game
         streamsData = request(streamsURL)
         if "error" in streamsData.keys():
             raise URLError(response)
