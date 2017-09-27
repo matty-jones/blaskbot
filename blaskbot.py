@@ -45,7 +45,7 @@ def main():
     fillOpList = Process(target=functions.threadFillOpList)
     updateDatabase = Process(target=functions.threadUpdateDatabase, args=([botComm]))
     subscribeTimer = Process(target=functions.timer, \
-                             args=('subscribe', 3600, [botComm, 'blaskatronic']))
+                             args=('subscribe', 3600, [botComm, cfg.JOIN.lower()]))
     typeAsHost = Process(target=functions.hostChat, args=([hostComm,\
                             os.fdopen(os.dup(sys.stdin.fileno()))]))
     # ...and start them
@@ -79,8 +79,13 @@ def main():
                     functions.printv("No function by the name " + command + "!", 4)
             else:
                 # Increment the number of sent messages
-                if username.lower() not in ['blaskbot', 'tmi', 'blaskatronic']:
+                if username.lower() not in ['tmi', cfg.NICK.lower(), cfg.JOIN.lower()]:
                     functions.incrementNumberOfChatMessages()
+                    # Read chat and execute commands based on what people are talking about
+                    if "discord" in message.lower():
+                        getattr(commands, 'discord')([botComm, username])
+                    elif "twitter" in message.lower():
+                        getattr(commands, 'twitter')([botComm, username])
         # Sleep and then rerun loop
         T.sleep(1)
 
