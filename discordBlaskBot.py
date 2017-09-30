@@ -176,7 +176,13 @@ async def drinks(context):
 @client.command(pass_context=True)
 async def schedule(context):
     '''Use if you've forgotten the schedule.'''
-    _chat(sock, "Blaskatronic TV goes live at 2:30am UTC on Wednesdays and Fridays and 5:30pm UTC on Saturdays!")
+    await client.say("Blaskatronic TV goes live at 2:30am UTC on Wednesdays and Fridays and 5:30pm UTC on Saturdays!")
+
+
+@client.command(pass_context=True)
+async def test(context):
+    '''Use if you've forgotten the schedule.'''
+    await client.send_message(discord.Object(id='358106199129980929'), "This is a test")
 
 
 def execute():
