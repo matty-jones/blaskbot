@@ -17,7 +17,7 @@ import tinydb.operations as tdbo
 from multiprocessing import Value
 import xml.etree.ElementTree as ET
 
-headers = {"Authorization":'OAuth ' + str(cfg.PASS).split(':')[1]}
+defaultHeader = {"Authorization":'OAuth ' + str(cfg.PASS).split(':')[1]}
 # This is a global variable, but needs to be shared between timer subprocesses
 # (read only, not modify) so use mp.Value()
 numberOfChatMessages = Value('d', 0)
@@ -252,61 +252,24 @@ def loadClipsDatabase():
 
 
 def getViewerList():
-    try:
-        viewerURL = "http://tmi.twitch.tv/group/user/" +\
-                   cfg.JOIN + "/chatters"
-        viewerData = request(viewerURL, header={"User-Agent": \
+    viewerData = queryAPI("http://tmi.twitch.tv/group/user/" +\
+                          cfg.JOIN + "/chatters", header={"User-Agent": \
             "Mozilla/5.0 (X11;Ubuntu;Linux x86_64;rv:55.0) Gecko/20100101 Firefox/55.0",\
             "Cache-Control": "max-age=0", "Connection": "keep-alive"})
-        if "error" in viewerData.keys():
-            raise URLError(response)
-        printv("Json loaded!", 5)
-        return viewerData
-    except URLError as e:
-        errorDetails = e.args[0]
-        printv("URLError with status " + errorDetails['status'] +
-               ", '" + errorDetails['error'] + "'!", 4)
-        printv("Error Message: " + errorDetails['message'], 4)
-        return None
-    except:
-        printv("Unexpected Error: " + repr(sys.exc_info()[0]), 2)
-        return None
+    return viewerData
 
 
 def getCurrentGame():
+    streamData = queryAPI("https://api.twitch.tv/kraken/channels/" + cfg.JOIN)
     try:
-        streamURL = "https://api.twitch.tv/kraken/channels/" + cfg.JOIN
-        streamData = request(streamURL)
-        if "error" in streamData.keys():
-            raise URLError(response)
-        printv("Json loaded!", 5)
         return streamData['game']
-    except URLError as e:
-        errorDetails = e.args[0]
-        printv("URLError with status " + errorDetails['status'] +
-               ", '" + errorDetails['error'] + "'!", 4)
-        printv("Error Message: " + errorDetails['message'], 4)
-        return None
-    except:
-        printv("UNEXPECTED ERROR: " + repr(sys.exc_info()[0]), 2)
+    except KeyError:
         return None
 
 
 def getStreamsOfCurrentGame(game, currentViewers):
-    try:
-        streamsURL = "https://api.twitch.tv/kraken/streams/?game=" + game
-        streamsData = request(streamsURL)
-        if "error" in streamsData.keys():
-            raise URLError(response)
-        printv("Json loaded!", 5)
-    except URLError as e:
-        errorDetails = e.args[0]
-        printv("URLError with status " + errorDetails['status'] +
-               ", '" + errorDetails['error'] + "'!", 4)
-        printv("Error Message: " + errorDetails['message'], 4)
-        return None
-    except:
-        printv("Unexpected Error: " + repr(sys.exc_info()[0]), 2)
+    streamsData = queryAPI("https://api.twitch.tv/kraken/streams/?game=" + game)
+    if streamsData is None:
         return None
     streamViewers = []
     for stream in streamsData['streams']:
@@ -334,12 +297,11 @@ def isOp(user):
 
 
 def streamIsUp():
-    streamDataURL = "https://api.twitch.tv/kraken/streams/" + cfg.JOIN
-    streamData = request(streamDataURL)
+    streamData = queryAPI("https://api.twitch.tv/kraken/streams/" + cfg.JOIN)
     try:
         if not streamData['stream']:
             return False
-    except KeyError:
+    except:
         return False
     return True
 
@@ -351,14 +313,7 @@ def setStreamParams():
     put(channelURL, streamParams)
 
 
-def request(URL, header=headers):
-    printv("Reading from URL: '" + URL + "'...", 5)
-    req = requests.get(URL, headers=header)
-    printv("Loading user_data json...", 5)
-    return req.json()
-
-
-def put(URL, dataDict, header=headers):
+def put(URL, dataDict, header=defaultHeader):
     printv("Sending " + repr(dataDict) + " to URL: '" + URL + "'...", 4)
     req = requests.put(URL, data=dataDict, headers=header)
 
@@ -405,6 +360,42 @@ def getXMLAttributes(xmlData):
                 else:
                     attributeDict[element.tag][subelement.tag] = subelement.text
     return attributeDict
+
+
+def queryAPI(URL, header=defaultHeader):
+    try:
+        data = requests.get(URL, headers=header).json()
+        if "error" in data.keys():
+            raise URLError
+        printv("Json loaded!", 5)
+        return data
+    except URLError as e:
+        errorDetails = e.args[0]
+        printv("URLError with status " + errorDetails['status'] +
+               ", '" + errorDetails['error'] + "'!", 4)
+        printv("Error Message: " + errorDetails['message'], 4)
+    except:
+        printv("UNEXPECTED ERROR: " + repr(sys.exc_info()[0]))
+    printv("Error from URL: " + URL, 2)
+    return None
+
+
+def thankLatestFollower(sock):
+    followersData = None
+    previousFollower = None
+    while followersData is None:
+        followersData = queryAPI("https://api.twitch.tv/kraken/channels/" + cfg.JOIN +\
+                                 "/follows?direction=desc&limit=1")
+        if followersData is None:
+            continue
+        latestFollower = followersData['follows']['user']['name']
+        if previousFollower is None:
+            previousFollower = latestFollower
+            continue
+        if latestFollower != previousFollower:
+            chat(sock, "Thank you for the follow, " + latestFollower +\
+                 "! Welcome to the BlaskForce!")
+        sleep(5)
 
 
 if __name__ == "__main__":

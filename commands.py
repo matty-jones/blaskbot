@@ -4,7 +4,7 @@ can call upon for execution.
 '''
 
 from functions import chat as _chat
-from functions import request as _request
+from functions import queryAPI as _queryAPI
 from functions import getXMLAttributes as _getXMLAttributes
 from functions import loadViewersDatabase as _getViewersDB
 from functions import loadClipsDatabase as _getClipsDB
@@ -270,9 +270,8 @@ def twitter(args):
 
 def uptime(args):
     sock = args[0]
-    streamDataURL = "https://api.twitch.tv/kraken/streams/" + _cfg.JOIN
-    streamData = _request(streamDataURL)
-    if not streamData['stream']:
+    streamData = _queryAPI("https://api.twitch.tv/kraken/streams/" + _cfg.JOIN)
+    if (streamData is None) or (not streamData['stream']):
         _chat(sock, "The stream isn't online, or the Twitch API hasn't" +\
               " been updated yet!")
     else:
