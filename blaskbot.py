@@ -39,20 +39,23 @@ def main():
 
     # Fire the one-off functions to be performed on boot
     functions.setAllToLurker()
-    functions.setStreamParams()
 
     # Create asynchronous, recurring child processes...
-    fillOpList = Process(target=functions.threadFillOpList)
-    updateDatabase = Process(target=functions.threadUpdateDatabase, args=([botComm]))
-    subscribeTimer = Process(target=functions.timer, \
-                             args=('subscribe', 3600, [botComm, cfg.JOIN.lower()]))
+    fillOpList = Process(target=functions.threadFillOpList, daemon=True)
+    updateDatabase = Process(target=functions.threadUpdateDatabase, args=([botComm]),\
+                            daemon=True)
+    subscribeTimer = Process(target=functions.timer, args=('subscribe', 3600,\
+                            [botComm, cfg.JOIN.lower()]), daemon=True)
     typeAsHost = Process(target=functions.hostChat, args=([hostComm,\
-                            os.fdopen(os.dup(sys.stdin.fileno()))]))
+                            os.fdopen(os.dup(sys.stdin.fileno()))]), daemon=True)
+    thankLatest = Process(target=functions.thankLatest, args=([hostComm]),\
+                         daemon=True)
     # ...and start them
     fillOpList.start()
     updateDatabase.start()
     subscribeTimer.start()
     typeAsHost.start()
+    thankLatest.start()
 
     while True:
         hostResponse = hostComm.recv(1024).decode("utf-8")
