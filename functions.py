@@ -307,10 +307,12 @@ def streamIsUp():
 
 
 def setStreamParams():
-    streamParams = {"channel": {'status': cfg.streamTitle, 'game': cfg.gameTitle}}
+    streamParams = {'channel': {'status': cfg.streamTitle, 'game': cfg.gameTitle}}
     channelURL = "https://api.twitch.tv/kraken/channels/" + cfg.JOIN
-    #channelURL = "https://api.twitch.tv/kraken/channel"
+    print("Setting stream title to: " + cfg.streamTitle + " and game to: " + cfg.gameTitle, 4)
+    printv("Setting stream title to: " + cfg.streamTitle + " and game to: " + cfg.gameTitle, 4)
     put(channelURL, streamParams)
+    print(queryAPI(channelURL))#["channel"]["status"])
 
 
 def put(URL, dataDict, header=defaultHeader):
@@ -375,27 +377,26 @@ def queryAPI(URL, header=defaultHeader):
                ", '" + errorDetails['error'] + "'!", 4)
         printv("Error Message: " + errorDetails['message'], 4)
     except:
-        printv("UNEXPECTED ERROR: " + repr(sys.exc_info()[0]))
+        printv("UNEXPECTED ERROR: " + repr(sys.exc_info()[0]), 2)
     printv("Error from URL: " + URL, 2)
     return None
 
 
-def thankLatestFollower(sock):
-    followersData = None
-    previousFollower = None
-    while followersData is None:
-        followersData = queryAPI("https://api.twitch.tv/kraken/channels/" + cfg.JOIN +\
+def thankLatest(sock):
+    previousUsername = None
+    while True:
+        recentData = queryAPI("https://api.twitch.tv/kraken/channels/" + cfg.JOIN +\
                                  "/follows?direction=desc&limit=1")
-        if followersData is None:
+        if recentData is None:
             continue
-        latestFollower = followersData['follows']['user']['name']
-        if previousFollower is None:
-            previousFollower = latestFollower
+        latestUsername = recentData['follows'][0]['user']['name']
+        if previousUsername is None:
+            previousUsername = latestUsername
             continue
-        if latestFollower != previousFollower:
-            chat(sock, "Thank you for the follow, " + latestFollower +\
+        if latestUsername != previousUsername:
+            chat(sock, "Thank you for the follow, " + latestUsername +\
                  "! Welcome to the BlaskForce!")
-        sleep(5)
+        T.sleep(5)
 
 
 if __name__ == "__main__":
