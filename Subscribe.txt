@@ -7,3 +7,5 @@ You can see the functions I can help you with by typing !help.
 Shows are at 8:30pm Mountain Time on Tuesdays and Thursdays, and 11:30am Mountain Time on Saturdays!
 Join our Discord at www.discord.me/blaskatronic!
 Subscribers have access to the blaskaFace, blaskaDoryx, and blaskaHCT emotes! Spread the word!
+If you have a suggestion for BlaskBot, post it on the discord under #robotics-facility!
+Feel free to help develop BlaskBot by forking www.github.com/matty-jones/blaskbot!
