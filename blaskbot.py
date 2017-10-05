@@ -79,6 +79,10 @@ def main():
                     command = fullMessage[0][1:]
                     username = response[response.index(':') + 1: response.index('!')]
                     arguments = [botComm, username] + fullMessage[1:]
+                    if command in cfg.opOnlyCommands:
+                        if not functions.isOp(username):
+                            functions.chat(botComm, "You don't have permission to run that command!")
+                            continue
                     try:
                         getattr(commands, command)(arguments)
                     except AttributeError as e:
