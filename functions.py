@@ -372,10 +372,7 @@ def queryAPI(URL, header=defaultHeader):
         printv("Json loaded!", 5)
         return data
     except URLError as e:
-        errorDetails = e.args[0]
-        printv("URLError with status " + errorDetails['status'] +
-               ", '" + errorDetails['error'] + "'!", 4)
-        printv("Error Message: " + errorDetails['message'], 4)
+        printv("URLError: " + str(e) + "!", 4)
     except:
         printv("UNEXPECTED ERROR: " + repr(sys.exc_info()[0]), 2)
     printv("Error from URL: " + URL, 2)
@@ -396,6 +393,7 @@ def thankLatest(sock):
         if latestUsername != previousUsername:
             chat(sock, "Thank you for the follow, " + latestUsername +\
                  "! Welcome to the BlaskForce!")
+            latestUsername = previousUsername
         T.sleep(5)
 
 
