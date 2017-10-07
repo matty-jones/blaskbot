@@ -70,19 +70,12 @@ def chat(sock, msg, sendType='bot'):
     command = False
     if sendType == 'bot':
         msg = "/me : " + msg
-    else:
-        if msg[0] == "!":
-            command = True
     printv(sendType + ": " + msg, 1)
     try:
         sock.send("PRIVMSG #{} :{}\r\n".format(cfg.JOIN, msg).encode('utf-8'))
-        if command is True:
-            commandName = msg.split(' ')[0][1:]
-            # THIS DOESN'T WORK YET, FIX IT
-            exec("from commands import " + commandName + " as tempCommand")
-            tempCommand([sock, cfg.JOIN])
-    except:
-        printv("ERROR MESSAGE NOT SENT", 1)
+    except as e:
+        printv(e, 1)
+        printv("ERROR, MESSAGE NOT SENT", 1)
 
 
 def ban(sock, user):
