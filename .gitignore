@@ -9,3 +9,5 @@ configurator.py
 *.swo
 *.pem
 Images/*
+testing/
+voice/
