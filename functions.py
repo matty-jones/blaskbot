@@ -73,9 +73,8 @@ def chat(sock, msg, sendType='bot'):
     printv(sendType + ": " + msg, 1)
     try:
         sock.send("PRIVMSG #{} :{}\r\n".format(cfg.JOIN, msg).encode('utf-8'))
-    except as e:
-        printv(e, 1)
-        printv("ERROR, MESSAGE NOT SENT", 1)
+    except:
+        printv("ERROR: " + repr(sys.exec_info()[0]) + ", MESSAGE NOT SENT", 1)
 
 
 def ban(sock, user):
