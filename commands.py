@@ -371,7 +371,7 @@ def rank(args):
                 totalTimeArray.append(str(value) + " " + str(key))
         totalTime = ' and '.join(totalTimeArray[-2:])
         if len(totalTimeArray) == 3:
-            totalTime = totalTime[0] + ", " + totalTime
+            totalTime = totalTimeArray[0] + ", " + totalTime
         for key, value in timeDict.items():
             if value > 1:
                 timeArray.append(str(value) + " " + str(key) + "s")
@@ -379,7 +379,7 @@ def rank(args):
                 timeArray.append(str(value) + " " + str(key))
         timeToNext = ' and '.join(timeArray[-2:])
         if len(timeArray) == 3:
-            timeToNext = timeToNext[0] + ", " + timeToNext
+            timeToNext = timeArray[0] + ", " + timeToNext
         rankMod = ' '
         if currentRank[0] in ['a', 'e', 'i', 'o', 'u']:
             rankMod = 'n '
