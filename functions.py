@@ -142,9 +142,14 @@ def threadFillOpList():
 
 def threadUpdateDatabase(sock):
     printv("Loading the viewer database...", 5)
-    viewerDatabase = loadViewersDatabase()
+    try:
+        connection = psycopg2.connect(database=cfg.JOIN, user=cfg.BOTNICK)
+    except psycopg2.OperationalError:
+        printv("The database doesn't exist! Please run `sudo -u postgres createdb " + cfg.JOIN + " -O " + cfg.NICK + "` to create it!", 1)
+        printv("There will be no points awarded this session.", 1)
+        return
     printv("Database loaded!", 5)
-    skipViewers = ['blaskatronic', 'blaskbot', 'doryx']
+    skipViewers = cfg.skipViewers
     previousViewers = []
     while True:
         if streamIsUp():

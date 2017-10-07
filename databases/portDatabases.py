@@ -3,7 +3,7 @@ from tinydb import TinyDB, Query
 
 
 #def createTables():
-#    connection = psycopg2.connect(database='blaskatronic', user='blaskbot')
+#    connection = psycopg2.connect(database='blaskytest', user='blaskbot')
 #    cursor = connection.cursor()
 #    cursor.execute("CREATE TABLE Clips (ID SMALLINT PRIMARY KEY, URL VARCHAR(70), Author VARCHAR(25));")
 #    cursor.execute("CREATE TABLE Viewers (ID SMALLINT PRIMARY KEY, Name VARCHAR(25), Points SMALLINT, Rank VARCHAR(25), Multiplier FLOAT, Lurker BIT, TotalPoints SMALLINT, DrinkExpiry TIME, Drinks SMALLINT);")
@@ -11,7 +11,7 @@ from tinydb import TinyDB, Query
 #
 #
 #def testTables():
-#    connection = psycopg2.connect(database='blaskatronic', user='blaskbot')
+#    connection = psycopg2.connect(database='blaskytest', user='blaskbot')
 #    cursor = connection.cursor()
 #    cursor.execute("SELECT * FROM Viewers;")
 #    cursor.fetchall()
@@ -21,25 +21,25 @@ from tinydb import TinyDB, Query
 
 
 if __name__ == "__main__":
-    viewersDB = TinyDB('./blaskatronicViewers.db')
-    clipsDB = TinyDB('./blaskatronicClips.db')
+    viewersDB = TinyDB('./blaskytestViewers.db')
+    clipsDB = TinyDB('./blaskytestClips.db')
     discordDB = TinyDB('./discordNames.db')
 
     viewerDict = viewersDB.search(Query().name.exists())
     clipDict = clipsDB.search(Query().url.exists())
     discordDict = discordDB.search(Query().twitchName.exists())
 
-    connection = psycopg2.connect(database='blaskatronic', user='blaskbot')
+    connection = psycopg2.connect(database='blaskytest', user='blaskbot')
     cursor = connection.cursor()
-    #cursor.execute("CREATE TABLE Clips (ID SMALLINT PRIMARY KEY, URL VARCHAR(70), Author VARCHAR(25));")
-    #cursor.execute("CREATE TABLE Viewers (ID SMALLINT PRIMARY KEY, Name VARCHAR(25), Points SMALLINT, Rank VARCHAR(25), Multiplier FLOAT, Lurker BIT, TotalPoints SMALLINT, DrinkExpiry TIME, Drinks SMALLINT);")
+    cursor.execute("CREATE TABLE Clips (ID SMALLINT PRIMARY KEY, URL VARCHAR(70), Author VARCHAR(25));")
+    cursor.execute("CREATE TABLE Viewers (ID SMALLINT PRIMARY KEY, Name VARCHAR(25), Points SMALLINT, Rank VARCHAR(25), Multiplier FLOAT, Lurker BIT, TotalPoints SMALLINT, DrinkExpiry TIME, Drinks SMALLINT);")
 
-    #for index, clip in enumerate(clipDict):
-    #    cursor.execute("INSERT INTO Clips (ID, " + ', '.join(clip.keys()) + ") VALUES (%s, %s, %s);", tuple([index] + list(clip.values())))
+    for index, clip in enumerate(clipDict):
+        cursor.execute("INSERT INTO Clips (ID, " + ', '.join(clip.keys()) + ") VALUES (%s, %s, %s);", tuple([index] + list(clip.values())))
 
-    #for index, viewer in enumerate(viewerDict):
-    #    viewer['lurker'] = 'B' + str(int(eval(viewer['lurker'].capitalize())))
-    #    cursor.execute("INSERT INTO Viewers (ID, " + ', '.join(viewer.keys()) + ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);", tuple([index] + list(viewer.values())))
+    for index, viewer in enumerate(viewerDict):
+        viewer['lurker'] = 'B' + str(int(eval(viewer['lurker'].capitalize())))
+        cursor.execute("INSERT INTO Viewers (ID, " + ', '.join(viewer.keys()) + ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);", tuple([index] + list(viewer.values())))
 
     ### Sorting the Discord name mappings out
     # First, create the discord column
