@@ -1,7 +1,6 @@
 import psycopg2
 from tinydb import TinyDB, Query
 
-
 #def createTables():
 #    connection = psycopg2.connect(database='blaskytest', user='blaskbot')
 #    cursor = connection.cursor()
@@ -21,25 +20,35 @@ from tinydb import TinyDB, Query
 
 
 if __name__ == "__main__":
-    viewersDB = TinyDB('./blaskytestViewers.db')
-    clipsDB = TinyDB('./blaskytestClips.db')
+    channel = 'blaskatronic'
+    viewersDB = TinyDB('./' + channel + 'Viewers.db')
+    clipsDB = TinyDB('./' + channel + 'Clips.db')
     discordDB = TinyDB('./discordNames.db')
 
     viewerDict = viewersDB.search(Query().name.exists())
     clipDict = clipsDB.search(Query().url.exists())
     discordDict = discordDB.search(Query().twitchName.exists())
 
-    connection = psycopg2.connect(database='blaskytest', user='blaskbot')
+    try:
+        connection = psycopg2.connect(database=channel + 'db', user='blaskbot')
+    except psycopg2.OperationalError:
+        tempConnect = psycopg2.connect(database='postgres', user='postgres')
+        tempConnect.autocommit = True
+        print('CREATE DATABASE {};'.format(channel + 'db'))
+        tempConnect.cursor().execute('CREATE DATABASE {};'.format(channel + 'db'))
+        tempConnect.close()
+        connection = psycopg2.connect(database=channel + 'db', user='blaskbot')
+
     cursor = connection.cursor()
-    cursor.execute("CREATE TABLE Clips (ID SMALLINT PRIMARY KEY, URL VARCHAR(70), Author VARCHAR(25));")
-    cursor.execute("CREATE TABLE Viewers (ID SMALLINT PRIMARY KEY, Name VARCHAR(25), Points SMALLINT, Rank VARCHAR(25), Multiplier FLOAT, Lurker BIT, TotalPoints SMALLINT, DrinkExpiry TIME, Drinks SMALLINT);")
+    cursor.execute("CREATE TABLE Clips (ID SERIAL PRIMARY KEY, URL VARCHAR(70), Author VARCHAR(25));")
+    cursor.execute("CREATE TABLE Viewers (ID SERIAL PRIMARY KEY, Name VARCHAR(25), Points SMALLINT, Rank VARCHAR(25), Multiplier FLOAT, Lurker BIT, TotalPoints SMALLINT, DrinkExpiry TIME, Drinks SMALLINT);")
 
     for index, clip in enumerate(clipDict):
-        cursor.execute("INSERT INTO Clips (ID, " + ', '.join(clip.keys()) + ") VALUES (%s, %s, %s);", tuple([index] + list(clip.values())))
+        cursor.execute("INSERT INTO Clips (" + ', '.join(clip.keys()) + ") VALUES (%s, %s);", tuple(clip.values()))
 
     for index, viewer in enumerate(viewerDict):
         viewer['lurker'] = 'B' + str(int(eval(viewer['lurker'].capitalize())))
-        cursor.execute("INSERT INTO Viewers (ID, " + ', '.join(viewer.keys()) + ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);", tuple([index] + list(viewer.values())))
+        cursor.execute("INSERT INTO Viewers (" + ', '.join(viewer.keys()) + ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s);", tuple(viewer.values()))
 
     ### Sorting the Discord name mappings out
     # First, create the discord column
