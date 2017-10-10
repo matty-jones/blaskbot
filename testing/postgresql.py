@@ -3,6 +3,7 @@ import tinydb
 from datetime import datetime
 from multiprocessing import Process
 import time as T
+from psycopg2.extras import DictCursor
 
 connection = None
 
@@ -123,6 +124,30 @@ def getBoth(viewer='blaskatronic'):
     print(currentPoints, currentTotalPoints)
 
 
+def buyDrink(viewer='blaskatronic'):
+    connection = psycopg2.connect(database='testdb', user='blaskbot')
+    cursor = connection.cursor()
+    numberOfDrinks = 5
+    cursor.execute("SELECT Drinks FROM Viewers WHERE name='" + viewer + "';")
+    currentDrinks = cursor.fetchone()[0]
+    print(currentDrinks)
+    print(cursor.mogrify("UPDATE Viewers SET drinks=drinks + " + str(numberOfDrinks) + " WHERE name='" + viewer.lower() + "';"))
+    cursor.execute("UPDATE Viewers SET drinks=drinks + " + str(numberOfDrinks) + " WHERE name='" + viewer.lower() + "';")
+    cursor.execute("SELECT Drinks FROM Viewers WHERE name='" + viewer + "';")
+    currentDrinks = cursor.fetchone()[0]
+    print(currentDrinks)
+
+
+def getRandomClip():
+    connection = psycopg2.connect(database='blaskatronic', user='blaskbot')
+    cursor = connection.cursor(cursor_factory=DictCursor)
+    cursor.execute("SELECT * FROM Clips")
+    clips = cursor.fetchall()
+    index = -1
+    print(clips[index]['url'])
+
+
+
 if __name__ == "__main__":
     #try:
     #    #createTables(cursor)
@@ -150,7 +175,9 @@ if __name__ == "__main__":
     #checkViewerExists()
     #updatePoints()
     #updateLurker()
-    getBoth()
+    #getBoth()
+    #buyDrink()
+    getRandomClip()
 
     if connection:
         connection.close()
