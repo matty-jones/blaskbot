@@ -38,6 +38,7 @@ def main():
     #functions.chat(sock, "Booting up...")
 
     # Fire the one-off functions to be performed on boot
+    functions.checkDatabaseExists()
     functions.setAllToLurker()
 
     # Create asynchronous, recurring child processes...

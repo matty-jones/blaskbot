@@ -141,8 +141,7 @@ def threadFillOpList():
         T.sleep(5)
 
 
-def threadUpdateDatabase(sock):
-    printv("Loading the viewer database...", 5)
+def checkDatabaseExists():
     try:
         connection = psycopg2.connect(database=cfg.JOIN, user=cfg.BOTNICK)
     except psycopg2.OperationalError:
@@ -152,6 +151,18 @@ def threadUpdateDatabase(sock):
         tempConnect.cursor().execute('CREATE DATABASE {} OWNER {};'.format(cfg.JOIN, cfg.BOTNICK))
         tempConnect.close()
         connection = psycopg2.connect(database=cfg.JOIN, user='blaskbot')
+        cursor = connection.cursor()
+        printv("Constructing the Viewers Table...", 1)
+        cursor.execute("CREATE TABLE Viewers (ID SERIAL PRIMARY KEY, Name VARCHAR(25), Points SMALLINT, Rank VARCHAR(25), Multiplier FLOAT, Lurker BIT, TotalPoints SMALLINT, DrinkExpiry TIME, Drinks SMALLINT, Discord VARCHAR(25));")
+        printv("Constructing the Clips Table...", 1)
+        cursor.execute("CREATE TABLE Clips (ID SERIAL PRIMARY KEY, URL VARCHAR(70), Author VARCHAR(25));")
+        printv("Empty database created. Returning to main program.", 1)
+    connection.close()
+
+
+def threadUpdateDatabase(sock):
+    printv("Loading the viewer database...", 5)
+    connection = psycopg2.connect(database=cfg.JOIN, user=cfg.BOTNICK)
     cursor = connection.cursor()
     printv("Database loaded!", 5)
     skipViewers = cfg.skipViewers
@@ -244,6 +255,7 @@ def updateLurkerStatus(viewer):
         printv("Error updating lurker status for " + viewer + ": " + repr(sys.exc_info()[0]), 5)
         pass
     connection.commit()
+    connection.close()
 
 
 def setAllToLurker():
@@ -251,6 +263,7 @@ def setAllToLurker():
     cursor = connection.cursor()
     cursor.execute("UPDATE Viewers SET lurker=(%s);", tuple(['B1']))
     connection.commit()
+    connection.close()
 
 
 def getStreamRank(currentViewerCount):
