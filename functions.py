@@ -72,19 +72,11 @@ def chat(sock, msg, sendType='bot'):
     command = False
     if sendType == 'bot':
         msg = "/me : " + msg
-    else:
-        if msg[0] == "!":
-            command = True
     printv(sendType + ": " + msg, 1)
     try:
         sock.send("PRIVMSG #{} :{}\r\n".format(cfg.JOIN, msg).encode('utf-8'))
-        if command is True:
-            commandName = msg.split(' ')[0][1:]
-            # THIS DOESN'T WORK YET, FIX IT
-            exec("from commands import " + commandName + " as tempCommand")
-            tempCommand([sock, cfg.JOIN])
     except:
-        printv("ERROR MESSAGE NOT SENT", 1)
+        printv("ERROR: " + repr(sys.exec_info()[0]) + ", MESSAGE NOT SENT", 1)
 
 
 def ban(sock, user):
@@ -399,12 +391,10 @@ def queryAPI(URL, header=defaultHeader):
         data = requests.get(URL, headers=header).json()
         if "error" in data.keys():
             raise URLError
+        printv("Json loaded!", 5)
         return data
     except URLError as e:
-        errorDetails = e.args[0]
-        printv("URLError with status " + errorDetails['status'] +
-               ", '" + errorDetails['error'] + "'!", 4)
-        printv("Error Message: " + errorDetails['message'], 4)
+        printv("URLError: " + str(e) + "!", 4)
     except:
         printv("UNEXPECTED ERROR: " + repr(sys.exc_info()[0]), 2)
     printv("Error from URL: " + URL, 2)
@@ -425,6 +415,7 @@ def thankLatest(sock):
         if latestUsername != previousUsername:
             chat(sock, "Thank you for the follow, " + latestUsername +\
                  "! Welcome to the BlaskForce!")
+            latestUsername = previousUsername
         T.sleep(5)
 
 
