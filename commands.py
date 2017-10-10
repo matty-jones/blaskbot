@@ -18,8 +18,8 @@ import requests as _requests
 from datetime import datetime as _datetime
 import re as _re
 from html import unescape as _uesc
-from tinydb import Query as _Query
-import tinydb.operations as _tdbo
+import psycopg2
+from psycopg2.extras import DictCursor as _dictCursor
 
 
 def time(args):
@@ -73,7 +73,7 @@ def roll(args):
 def buydrink(args):
     sock = args[0]
     userName = args[1]
-    connection = psycopg2.connect(database=_cfg.JOIN, user=_cfg.BOTNICK)
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
     currentPoints = int(cursor.fetchone()[0])
@@ -173,7 +173,7 @@ def drink(args):
         _chat(sock, "That's way too many drinks to have all at once! You'll be chundering " +\
              "everywhere!")
         return 0
-    connection = psycopg2.connect(database=_cfg.JOIN, user=_cfg.BOTNICK)
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("SELECT drinks FROM Viewers WHERE name='" + userName.lower() + "';")
     totalNumberAllowed = int(cursor.fetchone()[0])
@@ -201,7 +201,7 @@ def drink(args):
 def drinks(args):
     sock = args[0]
     userName = args[1]
-    connection = psycopg2.connect(database=_cfg.JOIN, user=_cfg.BOTNICK)
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("SELECT drinks FROM Viewers WHERE name='" + userName.lower() + "';")
     numberOfDrinks = int(cursor.fetchone()[0])
@@ -303,7 +303,7 @@ def uptime(args):
 def blaskoins(args):
     sock = args[0]
     userName = args[1]
-    connection = psycopg2.connect(database=_cfg.JOIN, user=_cfg.BOTNICK)
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     try:
         cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
@@ -330,7 +330,7 @@ def blaskoins(args):
 def rank(args):
     sock = args[0]
     userName = args[1]
-    connection = psycopg2.connect(database=_cfg.JOIN, user=_cfg.BOTNICK)
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     try:
         cursor.execute("SELECT totalpoints FROM Viewers WHERE name='" + userName.lower() + "';")
@@ -386,19 +386,21 @@ def rank(args):
     connection.close()
 
 
-
 def clip(args):
     sock = args[0]
     additionalArgs = args[1:]
     userName = additionalArgs[0]
-    clipDB = _getClipsDB()
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor(cursor_factory=_dictCursor)
+    cursor.execute("SELECT * FROM Clips;")
+    clipList = cursor.fetchall()
     if len(additionalArgs) == 1:
-        # Just return a random clip (indexed from 1)
-        clipNo = int(_R.randrange(len(clipDB))) + 1
-        url = "https://clips.twitch.tv/" + clipDB.get(eid=clipNo)['url']
-        author = clipDB.get(eid=clipNo)['author']
+        # Just return a random clip
+        clipNo = int(_R.randrange(len(clipList)))
+        url = "https://clips.twitch.tv/" + clipList[clipNo]['url']
+        author = clipList[clipNo]['author']
         _printv("Clip request: " + url, 4)
-        _chat(sock, "Check out this awesome clip (#" + str(clipNo - 1) + "): " + url)
+        _chat(sock, "Check out this awesome clip (#" + str(clipNo) + "): " + url)
     elif additionalArgs[1] == 'add':
         if userName is _isOp():
             try:
@@ -409,43 +411,57 @@ def clip(args):
             except IndexError:
                 _chat(sock, "The correct syntax is !clip add <CLIP SLUG> <AUTHOR>.")
             else:
-                clipsDB.insert({'url': url, 'author': author})
+                cursor.execute("INSERT INTO Clips VALUES (%s, %s);", (url, author))
+                connection.commit()
         else:
             _chat(sock, "A moderator will take a look at your clip and " +\
                   "add it to my database if they like it!")
     elif len(additionalArgs) == 2:
         try:
-            clipNo = int(additionalArgs[1]) + 1
-            if (clipNo > -len(clipDB)) and (clipNo <= len(clipDB)):
-                url = "https://clips.twitch.tv/" + clipDB.get(eid=clipNo)['url']
+            clipNo = int(additionalArgs[1])
+            if (clipNo > -len(clipList)) and (clipNo <= len(clipList)):
+                url = "https://clips.twitch.tv/" + clipList[clipNo]['url']
                 _printv("Clip request: " + url, 4)
-                _chat(sock, "Here is clip #" + str(clipNo - 1) + ": " + url)
+                _chat(sock, "Here is clip #" + str(clipNo) + ": " + url)
             else:
-                _chat(sock, "Valid clip #s are 0 to " + str(len(clipDB) - 1) + " inclusive.")
+                _chat(sock, "Valid clip #s are 0 to " + str(len(clipList) - 1) + " inclusive.")
         except ValueError:
+            # Username specified instead
             clipFromUser = str(additionalArgs[1])
+            cursor.execute("SELECT * FROM Clips WHERE author='" + clipFromUser + "';")
+            userClips = cursor.fetchall()
             userClips = clipDB.search(_Query().author == clipFromUser)
             if len(userClips) > 0:
                 clipToShow = _R.choice(userClips)
                 url = "https://clips.twitch.tv/" + clipToShow['url']
                 _printv("Clip request: " + url, 4)
                 _chat(sock, "Check out " + clipFromUser + "'s awesome clip (#" +\
-                      str(clipToShow.eid - 1) + "): " + url)
+                      str(clipToShow['id'] - 1) + "): " + url)
             else:
                 _chat(sock, "Sorry, there are no clips from " + clipFromUser + " yet.")
     else:
         _chat(sock, "The correct syntax is !clip, !clip #, or !clip <NAME>.")
+    connection.close()
 
 
 def pay(args):
     sock = args[0]
     userName = args[1]
-    viewerDatabase = _getViewersDB()
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor()
     try:
+        cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
+        coinsAvailable = int(cursor.fetchone()[0])
         userToPay = args[2]
         amountToPay = int(args[3])
         if amountToPay < 0:
             raise IndexError
+        if amountToPay > coinsAvailable:
+            errorString = "You only have", coinsAvailable, _cfg.currencyName
+            if coinsAvailable > 1:
+                errorString += "s"
+            errorString += " available, " + userName + "!"
+            _chat(sock, errorString)
         viewerJSON = _getViewerList()
         viewerList = [viewerName for nameRank in [viewerJSON['chatters'][x] \
                                     for x in viewerJSON['chatters'].keys()] for viewerName \
@@ -453,20 +469,24 @@ def pay(args):
         if userToPay not in viewerList:
             _chat(sock, "I don't see " + userToPay + " in chat!")
             return 0
-        viewerDatabase.update(_tdbo.add('points', amountToPay), _Query().name == userToPay)
-        viewerDatabase.update(_tdbo.subtract('points', amountToPay), _Query().name == userName)
+        cursor.execute("UPDATE Viewers SET points=points + " + str(amountToPay) + " WHERE name='" + userToPay.lower() + "';")
+        cursor.execute("UPDATE Viewers SET points=points - " + str(amountToPay) + " WHERE name='" + userName.lower() + "';")
         payString = userName + " very kindly gives " + userToPay + " " + str(amountToPay) + " of" +\
              " their " + _cfg.currencyName + "s"
         _chat(sock, payString + "!")
     except:
         _chat(sock, "The correct syntax: !pay <USERNAME> <AMOUNT>. There are no defaults!")
+    connection.commit()
+    connection.close()
 
 
 def slot(args):
     sock = args[0]
     userName = args[1]
-    viewerDatabase = _getViewersDB()
-    currentPoints = viewerDatabase.search(_Query().name == userName)[0]['points']
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor()
+    cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
+    currentPoints = int(cursor.fetchone()[0])
     if currentPoints < _cfg.slotCost:
         _chat(sock, "Sorry, " + userName + ", but you do not have enough" + _cfg.currencyName +\
               " to play! You need at least " + str(_cfg.slotCost) + ".")
@@ -514,7 +534,9 @@ def slot(args):
     elif payout > 1:
         responseLine += " " + str(payout) + " " + _cfg.currencyName + "s clatter out" +\
                 " of the machine for " + userName + "!"
-    viewerDatabase.update(_tdbo.subtract('points', 10), _Query().name == userName)
-    viewerDatabase.update(_tdbo.add('points', payout), _Query().name == userName)
+    cursor.execute("UPDATE Viewers SET points=points - " + str(_cfg.slotCost) + " WHERE name='" + userName.lower() + "';")
+    cursor.execute("UPDATE Viewers SET points=points + " + str(payout) + " WHERE name='" + userName.lower() + "';")
     _printv("Username = " + userName + ", Result = " + responseLine + ", Winnings = " + str(payout), 1)
     _chat(sock, responseLine)
+    connection.commit()
+    connection.close()

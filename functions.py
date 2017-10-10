@@ -16,6 +16,7 @@ from tinydb import TinyDB, Query
 import tinydb.operations as tdbo
 from multiprocessing import Value
 import xml.etree.ElementTree as ET
+import psycopg2
 from psycopg2.extensions import AsIs
 
 defaultHeader = {"Authorization":'OAuth ' + str(cfg.PASS).split(':')[1]}
@@ -143,14 +144,14 @@ def threadFillOpList():
 
 def checkDatabaseExists():
     try:
-        connection = psycopg2.connect(database=cfg.JOIN, user=cfg.BOTNICK)
+        connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
     except psycopg2.OperationalError:
         printv("The database '" + cfg.JOIN + "' doesn't exist! Creating it now using the postgres superadmin user...", 1)
         tempConnect = psycopg2.connect(database='postgres', user='postgres')
         tempConnect.autocommit = True
-        tempConnect.cursor().execute('CREATE DATABASE {} OWNER {};'.format(cfg.JOIN, cfg.BOTNICK))
+        tempConnect.cursor().execute('CREATE DATABASE {} OWNER {};'.format(cfg.JOIN, cfg.NICK))
         tempConnect.close()
-        connection = psycopg2.connect(database=cfg.JOIN, user='blaskbot')
+        connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
         cursor = connection.cursor()
         printv("Constructing the Viewers Table...", 1)
         cursor.execute("CREATE TABLE Viewers (ID SERIAL PRIMARY KEY, Name VARCHAR(25), Points SMALLINT, Rank VARCHAR(25), Multiplier FLOAT, Lurker BIT, TotalPoints SMALLINT, DrinkExpiry TIME, Drinks SMALLINT, Discord VARCHAR(25));")
@@ -162,7 +163,7 @@ def checkDatabaseExists():
 
 def threadUpdateDatabase(sock):
     printv("Loading the viewer database...", 5)
-    connection = psycopg2.connect(database=cfg.JOIN, user=cfg.BOTNICK)
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
     cursor = connection.cursor()
     printv("Database loaded!", 5)
     skipViewers = cfg.skipViewers
@@ -197,15 +198,15 @@ def threadUpdateDatabase(sock):
                             cursor.execute("INSERT INTO Viewers (%s) VALUES %s;", (AsIs(', '.join(insert.keys()), tuple(insert.values()))))
                         cursor.execute("SELECT Points FROM Viewers WHERE name='" + viewer.lower() + "';")
                         currentPoints = cursor.fetchone()[0]
-                        printv(viewer + " has " + points + " points.", 5)
+                        printv(viewer + " has " + str(currentPoints) + " points.", 5)
                         printv("Incrementing " + viewer + "'s points...", 4)
-                        cursor.execute("UPDATE Viewers SET points=(%s) WHERE name='" + viewer.lower() + "';", tuple([currentPoints + cfg.pointsToAward]))
+                        cursor.execute("UPDATE Viewers SET points=points + " + str(cfg.pointsToAward) + " WHERE name='" + viewer.lower() + "';")
                         # Also increment `totalPoints' which is used to keep track of
                         # view time without taking into account minigame losses
                         cursor.execute("SELECT totalpoints FROM Viewers WHERE name='" + viewer.lower() + "';")
                         currentTotalPoints = cursor.fetchone()[0]
-                        cursor.execute("UPDATE Viewers SET totalpoints=(%s) WHERE name='" + viewer.lower() + "';", tuple([currentTotalPoints + cfg.pointsToAward]))
-                        if viewer in skipViewers:
+                        cursor.execute("UPDATE Viewers SET totalpoints=totalpoints + " + str(cfg.pointsToAward) + " WHERE name='" + viewer.lower() + "';")
+                        if viewer.lower() in skipViewers:
                             continue
                         printv("Calculating " + viewer + "'s rank...", 5)
                         currentPoints += cfg.pointsToAward
@@ -237,12 +238,14 @@ def threadUpdateDatabase(sock):
         else:
             printv("Stream not currently up. Not adding points.", 4)
         connection.commit()
-        printv("Database now looks like this: " + repr(viewerDatabase.all()), 5)
+        cursor.execute("SELECT * FROM Viewers;")
+        allViewers = cursor.fetchall()
+        printv("Database now looks like this: " + repr(allViewers), 5)
         T.sleep(cfg.awardDeltaT)
 
 
 def updateLurkerStatus(viewer):
-    connection = psycopg2.connect(database=cfg.JOIN, user=cfg.BOTNICK)
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
     cursor = connection.cursor()
     try:
         cursor.execute("SELECT lurker FROM Viewers WHERE name='" + viewer.lower() + "';")
@@ -259,7 +262,7 @@ def updateLurkerStatus(viewer):
 
 
 def setAllToLurker():
-    connection = psycopg2.connect(database=cfg.JOIN, user=cfg.BOTNICK)
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("UPDATE Viewers SET lurker=(%s);", tuple(['B1']))
     connection.commit()
@@ -396,7 +399,6 @@ def queryAPI(URL, header=defaultHeader):
         data = requests.get(URL, headers=header).json()
         if "error" in data.keys():
             raise URLError
-        printv("Json loaded!", 5)
         return data
     except URLError as e:
         errorDetails = e.args[0]
