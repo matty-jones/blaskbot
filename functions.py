@@ -12,8 +12,6 @@ import time as T
 import os
 import sys
 import socket
-from tinydb import TinyDB, Query
-import tinydb.operations as tdbo
 from multiprocessing import Value
 import xml.etree.ElementTree as ET
 import psycopg2

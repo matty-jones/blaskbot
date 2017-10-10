@@ -7,5 +7,4 @@ dependencies:
 - six=1.10.0=py35_0
 - pip:
   - requests
-  - tinydb==3.5.0
-  - ujson
+  - psycopg2
