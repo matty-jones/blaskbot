@@ -1,4 +1,4 @@
-# BlaskBot v0.9 #
+# BlaskBot v0.10 #
 
 
 The nascent stages of a custom-built fully-fledged Twitch bot.
@@ -14,6 +14,7 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 * `Lurker Protection' - the bot won't call you out in chat until you've sent at least one message during the stream!
 * The ability to send messages as the channel host/streamer through the bot, directly from the terminal
 * Discord integration!
+* Postgres integration for fast database management
 
 
 ## Current commands: ##
@@ -47,7 +48,6 @@ The nascent stages of a custom-built fully-fledged Twitch bot.
 * !help functions for all commands (either !help <COMMAND> or !<COMMAND> help)
 * Notify on host, follow, sub
 * !duel-esque minigame for people to gamble BlasKoins on
-* `Jukebox' feature where players can spend currency to change the song
 
 
 ## Patch Notes: ##
@@ -69,6 +69,7 @@ v0.8: Incorporated the !drink system and stream rank functionality
 
 v0.9: Integrated with the discord API. Status and chat functions available, no minigames. Also no synchronicity with the twitch bot yet.
 
+v0.10: Updated the database to use PostgreSQL rather than TinyDB. This will allow for achievements to easily be added.
 
 ## Installation Instructions: ##
 
@@ -96,19 +97,24 @@ The latter is strongly not recommended as you don't want to accidently commit an
     * The `VLCLUAPASS` variable is used to communicate with VLC using it's LUA HTTP interface. This has to be set up externally in VLC, information about which can be readily found online. When it is set up correctly, BlaskBot should be able to parse the "now playing" information from VLC, which is bound to the !nowplaying command to allow users to query the current song that is playing on stream. As with the !twitter command, you can just put any string in here and put `nowplaying` in the opOnlyCommands list to disable it if you don't want to set this up/use it.
 
 
-### Python Modules ###
-There are a couple of non-standard python modules currently in use in BlaskBot, namely `requests` for handling communication to and from the various APIs and servers, and `tinydb`, which is used to store the rank, points and clip details for the channel.
+### Setting up BlaskBot ###
+There are a couple of non-standard python modules currently in use in BlaskBot, namely `requests` for handling communication to and from the various APIs and servers, and `psycopg2`, which is used to interface with PostgreSQL to store the rank, points and clip details for the channel.
 As more functions are added, more modules might be used so the best way to account for this is to use an environment manager to create a virtual python environment that can be kept up to date with all the requisite modules.
+BlaskBot uses Miniconda to maintain its virtual environments.
 The prerequisites are stored in requirements.yml and this file will be updated with any new modules that are needed to run BlaskBot.
 
-* Installing Requisite Python Modules (on Linux/Unix, check the Conda documentation for how to activate and install environments on Windows):
-    * First install miniconda for your machine from https://conda.io/miniconda.html (python 3.6 is recommended)
-    * When miniconda has been installed and the `PYTHONPATH` environment variable updated to miniconda's location (should be done automatically), the environment can be set up by using `conda env create -f requirements.yml` from BlaskBot's root directory. (NB: On Linux you might get an error about tinydb 3.5.0 not being in the linux-64 conda channel. A simple `pip install tinydb==3.5.0` should fix this.
+
+* BlaskBot Installation:
+    * PostgreSQL will also need to be installed in order for BlaskBot to generate the required databases. Please visit https://www.postgresql.org/download/ to install the appropriate distribution of PostgreSQL for your operating system.
+    * Miniconda is also required to run BlaskBot. Please visit https://conda.io/miniconda.html (python 3.6 is recommended) to download the correct Miniconda distribution for your operating system.
+    * When Miniconda has been installed and the `PYTHONPATH` environment variable updated to miniconda's location (should be done automatically), the environment can be set up by using `conda env create -f requirements.yml` from BlaskBot's root directory.
     * After installation, the environment can be activated using `source activate blaskbot`. The environment will need to be active for the bot the run.
 
 
 ### Running the bot ###
 Simple! Activate the blaskbot conda environment and invoke `python blaskbot.py`!
+If you desire a trimmed-down version of BlaskBot for your Discord channel, please run `python discordBlaskBot.py`.
+The Discord integration is under active development and so should become a lot better very soon.
 
 
 ## License: ##
