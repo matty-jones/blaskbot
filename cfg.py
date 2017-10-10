@@ -6,7 +6,7 @@ import os
 HOST = "irc.chat.twitch.tv"  # The twitch IRC, don't change this.
 PORT = 6667                  # The twitch IRC port, don't change this either.
 NICK = os.getenv("BOTNICK")  # The bot's name! Must match the twitch account associated with the bot.
-JOIN = os.getenv("BOTCHATTEST")  # The channel BlaskBot is to look after (your twitch account name).
+JOIN = os.getenv("BOTCHAT")  # The channel BlaskBot is to look after (your twitch account name).
 PASS = os.getenv("BOTAUTH")  # The OAuth for the bot's twitch account (needed so the bot can chat).
 HOSTPASS = os.getenv("HOSTAUTH")  # The OAuth for the host's twitch account (needed for channel SET updates)
 DISCORDPASS = os.getenv("DISCORDAUTH")  # The Token for the discord bot app
@@ -19,7 +19,7 @@ owner = 'Blaskatronic'  # Dev name (will grant this person op in the bot to help
 twitterUsername = os.getenv("BOTTWIT")  # The name of the twitter channel to pull latest tweets from
 opList = []  # List of ops. You can leave this empty - BlaskBot will populate this list when the stream is live
 opOnlyCommands = ['subscribe']  # Any commands that you want to be op-only (i.e. viewers can't use them)
-skipViewers = [JOIN, NICK, 'doryx', 'fsmimp']  # Place the names of the viewers you'd like to skip in here (skipped viewers do earn blaskoins, but don't earn ranks.
+skipViewers = [JOIN.lower(), NICK.lower(), 'doryx', 'fsmimp']  # Place the names of the viewers you'd like to skip in here (skipped viewers do earn blaskoins, but don't earn ranks.
 VLCLUAPASS = os.getenv("VLCLUAPASS")  # This is the password for the LUA HTTP interface created by vlc.
                                       # If you don't know what this is, add 'nowplaying' to the opOnlyCommands
                                       # and never use it.
@@ -33,7 +33,7 @@ gameTitle = "Factorio"
 #communityList = ['UK_Streamers', 'SupportSmallStreamers', 'VarietyStreaming']
 
 # Viewer Points Database
-pointsToAward = 5  # Award this many points to a viewer...
+pointsToAward = 1  # Award this many points to a viewer...
 awardDeltaT = 60   # ...after they have watched for this many seconds
 currencyName = "BlasKoin"  # Custom currenty name
 ranks = {10: 'Probe',
@@ -61,7 +61,7 @@ ranks = {10: 'Probe',
          4000: 'Companion',
          4500: 'Cylon Sympathiser',
          5000: 'Cylon',
-         5500: 'Final Five',
+         5500: 'One of the Final Five',
          6000: 'MissingNo.',
          6500: 'NaN'}  # Set the ranks to whatever you want! Syntax = points: rankName
 
