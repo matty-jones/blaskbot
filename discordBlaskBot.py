@@ -3,6 +3,8 @@ import discord
 from discord.ext import commands
 import random as R
 import psycopg2
+import collections
+
 
 commandPrefix = "!"
 client = commands.Bot(command_prefix=commandPrefix)
@@ -104,11 +106,11 @@ async def rank(context):
         totalSecondsSoFar = totalPoints * int(cfg.awardDeltaT / cfg.pointsToAward)
         totalMins, totalSecs = divmod(totalSecondsSoFar, 60)
         totalHours, totalMins = divmod(totalMins, 60)
-        totalTimeDict = {'hour': int(totalHours), 'minute': int(totalMins), 'second': int(totalSecs)}
+        totalTimeDict = collections.OrderedDict({'hour': int(totalHours), 'minute': int(totalMins), 'second': int(totalSecs)})
         totalTimeArray = []
         mins, secs = divmod(secondsToNextRank, 60)
         hours, mins = divmod(mins, 60)
-        timeDict = {'hour': int(hours), 'minute': int(mins), 'second': int(secs)}
+        timeDict = collections.OrderedDict({'hour': int(hours), 'minute': int(mins), 'second': int(secs)})
         timeArray = []
         for key, value in totalTimeDict.items():
             if value > 1:

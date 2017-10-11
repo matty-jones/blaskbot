@@ -20,6 +20,7 @@ import re as _re
 from html import unescape as _uesc
 import psycopg2
 from psycopg2.extras import DictCursor as _dictCursor
+import collections
 
 
 def time(args):
@@ -286,9 +287,9 @@ def uptime(args):
         currentTime = _datetime.utcnow()
         deltaTime = str(currentTime - createdTime)
         components = _re.match(r"(.*)\:(.*)\:(.*)\.(.*)", deltaTime)
-        componentDict = {'hour': int(components.group(1)),
+        componentDict = collections.OrderedDict({'hour': int(components.group(1)),
                          'minute': int(components.group(2)),
-                         'second': int(components.group(3))}
+                         'second': int(components.group(3))})
         upArray = []
         for key, value in componentDict.items():
             if value > 1:
@@ -352,11 +353,11 @@ def rank(args):
         totalSecondsSoFar = totalPoints * int(_cfg.awardDeltaT / _cfg.pointsToAward)
         totalMins, totalSecs = divmod(totalSecondsSoFar, 60)
         totalHours, totalMins = divmod(totalMins, 60)
-        totalTimeDict = {'hour': int(totalHours), 'minute': int(totalMins), 'second': int(totalSecs)}
+        totalTimeDict = collections.OrderedDict({'hour': int(totalHours), 'minute': int(totalMins), 'second': int(totalSecs)})
         totalTimeArray = []
         mins, secs = divmod(secondsToNextRank, 60)
         hours, mins = divmod(mins, 60)
-        timeDict = {'hour': int(hours), 'minute': int(mins), 'second': int(secs)}
+        timeDict = collections.OrderedDict({'hour': int(hours), 'minute': int(mins), 'second': int(secs)})
         timeArray = []
         for key, value in totalTimeDict.items():
             if value > 1:
