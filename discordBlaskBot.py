@@ -34,7 +34,7 @@ async def dece(context):
 @client.command(pass_context=True)
 async def clip(context):
     '''Display a random clip for everyone's enjoyment.'''
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
     cursor = connection.cursor(cursor_factory=_dictCursor)
     cursor.execute("SELECT * FROM Clips;")
     clipList = cursor.fetchall()
@@ -50,7 +50,7 @@ async def blaskoins(context):
     '''Check how many blaskoins you have for the stream minigames.'''
     userName = context.message.author.display_name.lower()
     userNameCap = context.message.author.display_name
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("SELECT Name FROM Viewers WHERE Discord='" + userName.lower() + "';")
     userName = str(cursor.fetchone()[0])
@@ -59,7 +59,7 @@ async def blaskoins(context):
         currentPoints = int(cursor.fetchone()[0])
         cursor.execute("SELECT totalpoints FROM Viewers WHERE name='" + userName.lower() + "';")
         totalPoints = int(cursor.fetchone()[0])
-        currencyUnits = _cfg.currencyName
+        currencyUnits = cfg.currencyName
         if currentPoints > 1:
             currencyUnits += "s"
         cursor.execute("SELECT multiplier FROM Viewers WHERE name='" + userName.lower() + "';")
@@ -69,9 +69,9 @@ async def blaskoins(context):
             outputLine += ", with an active bonus of {:.2%}!".format(currentMultiplier - 1)
         else:
             outputLine += "!"
-        awaut client.say(outputLine)
+        await client.say(outputLine)
     except IndexError:
-        await client.say("I'm sorry, " + userNameCap + ", but I don't have any " + _cfg.currencyName +\
+        await client.say("I'm sorry, " + userNameCap + ", but I don't have any " + cfg.currencyName +\
               " data for you yet! Please try again later (and also welcome to the stream ;)).")
     connection.close()
 
@@ -81,7 +81,7 @@ async def rank(context):
     '''Check to see how long you've watched BlaskatronicTV for.'''
     userName = context.message.author.display_name.lower()
     userNameCap = context.message.author.display_name
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("SELECT Name FROM Viewers WHERE Discord='" + userName.lower() + "';")
     userName = str(cursor.fetchone()[0])
@@ -94,14 +94,14 @@ async def rank(context):
         currentMultiplier = float(cursor.fetchone()[0])
         nextRank = None
         pointsForNextRank = None
-        for rankPoints in _cfg.ranks.keys():
-            nextRank = _cfg.ranks[rankPoints]
+        for rankPoints in cfg.ranks.keys():
+            nextRank = cfg.ranks[rankPoints]
             pointsForNextRank = rankPoints
             if totalPoints < rankPoints:
                 break
-        secondsToNextRank = (pointsForNextRank - totalPoints) * int(_cfg.awardDeltaT /\
-                                (_cfg.pointsToAward * currentMultiplier))
-        totalSecondsSoFar = totalPoints * int(_cfg.awardDeltaT / _cfg.pointsToAward)
+        secondsToNextRank = (pointsForNextRank - totalPoints) * int(cfg.awardDeltaT /\
+                                (cfg.pointsToAward * currentMultiplier))
+        totalSecondsSoFar = totalPoints * int(cfg.awardDeltaT / cfg.pointsToAward)
         totalMins, totalSecs = divmod(totalSecondsSoFar, 60)
         totalHours, totalMins = divmod(totalMins, 60)
         totalTimeDict = {'hour': int(totalHours), 'minute': int(totalMins), 'second': int(totalSecs)}
@@ -144,7 +144,7 @@ async def drinks(context):
     '''Check how many drinks you have to enjoy on stream.'''
     userName = context.message.author.display_name.lower()
     userNameCap = context.message.author.display_name
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("SELECT Name FROM Viewers WHERE Discord='" + userName.lower() + "';")
     userName = str(cursor.fetchone()[0])
