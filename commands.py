@@ -251,14 +251,15 @@ def subscribe(args):
 
 def nowplaying(args):
     sock = args[0]
-    VLCLUAURL = "http://127.0.0.1:8080/requests/status.xml"
+    VLCLUAURL = "http://" + _cfg.EXTERNALIP + ":8080/requests/status.xml"
+    #VLCLUAURL = "http://127.0.0.1:8080/requests/status.xml"
     try:
         nowPlayingData = _requests.get(VLCLUAURL, auth=('',_cfg.VLCLUAPASS))
         VLCDict = _getXMLAttributes(nowPlayingData.content)
         nowPlayingLine = _uesc(VLCDict['information']['meta']['title']) + " by " +\
                 _uesc(VLCDict['information']['meta']['artist'])
         _chat(sock, "We're currently listening to the following song: " + nowPlayingLine)
-    except _requests.exceptions.ConnectionError:
+    except:
         _chat(sock, "I can't read the now playing data right now! Sorry!")
 
 

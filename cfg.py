@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 # Contains BlaskBot's config
 
@@ -23,6 +24,7 @@ skipViewers = [JOIN.lower(), NICK.lower(), 'doryx', 'fsmimp']  # Place the names
 VLCLUAPASS = os.getenv("VLCLUAPASS")  # This is the password for the LUA HTTP interface created by vlc.
                                       # If you don't know what this is, add 'nowplaying' to the opOnlyCommands
                                       # and never use it.
+EXTERNALIP = subprocess.check_output("dig +short myip.opendns.com @resolver1.opendns.com".split(" ")).decode("utf-8")[:-1]
 
 
 # Channel Stuff
