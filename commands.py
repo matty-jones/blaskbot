@@ -222,6 +222,10 @@ def schedule(args):
     _chat(sock, "Blaskatronic TV goes live at 2:30am UTC on Wednesdays and Fridays and 5:30pm UTC on Saturdays!")
 
 
+def commands(args):
+    help(args)
+
+
 def help(args):
     sock = args[0]
     username = args[1]
