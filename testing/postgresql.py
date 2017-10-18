@@ -1,9 +1,10 @@
 import psycopg2
-import tinydb
+#import tinydb
 from datetime import datetime
 from multiprocessing import Process
 import time as T
 from psycopg2.extras import DictCursor
+from psycopg2.extensions import AsIs
 
 connection = None
 
@@ -158,6 +159,21 @@ def getTop():
         print("%1d | %15s | %5d" % (i, viewerDetails['name'], viewerDetails['totalpoints']))
 
 
+def fixViewerDB():
+    connection = psycopg2.connect(database='blaskytest', user='blaskbot')
+    forbidden = ['blaskatronic', 'blaskbot', 'doryx']
+    cursor = connection.cursor()
+    viewer = 'chumpzilla'
+    insert = {'Name': viewer.lower(), 'Points': 0, 'Rank': 'Chump',
+              'Multiplier': 1.0, 'Lurker': 'B1', 'TotalPoints': 0,
+              'Drinks': 0, 'Discord': viewer.lower()}
+    cursor.execute("INSERT INTO Viewers (%s) VALUES %s;", (AsIs(', '.join(insert.keys())), AsIs(tuple(insert.values()))))
+    cursor.execute("SELECT * FROM Viewers WHERE name='" + viewer.lower() + "';")
+    currentViewer = cursor.fetchone()
+    print(currentViewer)
+
+
+
 
 if __name__ == "__main__":
     #try:
@@ -189,7 +205,8 @@ if __name__ == "__main__":
     #getBoth()
     #buyDrink()
     #getRandomClip()
-    getTop()
+    #getTop()
+    fixViewerDB()
 
     if connection:
         connection.close()
