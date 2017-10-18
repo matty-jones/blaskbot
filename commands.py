@@ -260,6 +260,7 @@ def nowplaying(args):
         nowPlayingLine = _uesc(VLCDict['information']['meta']['title']) + " by " +\
                 _uesc(VLCDict['information']['meta']['artist'])
         _chat(sock, "We're currently listening to the following song: " + nowPlayingLine)
+        _printv(nowPlayingLine, 1)
     except:
         _chat(sock, "I can't read the now playing data right now! Sorry!")
 
@@ -545,7 +546,7 @@ def slot(args):
                 " of the machine for " + userName + "!"
     cursor.execute("UPDATE Viewers SET points=points - " + str(_cfg.slotCost) + " WHERE name='" + userName.lower() + "';")
     cursor.execute("UPDATE Viewers SET points=points + " + str(payout) + " WHERE name='" + userName.lower() + "';")
-    _printv("Username = " + userName + ", Result = " + responseLine + ", Winnings = " + str(payout), 1)
+    _printv("Username = " + userName + ", Winnings = " + str(payout), 1)
     _chat(sock, responseLine)
     connection.commit()
     connection.close()

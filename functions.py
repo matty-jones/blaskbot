@@ -70,7 +70,7 @@ def chat(sock, msg, sendType='bot'):
     command = False
     if sendType == 'bot':
         msg = "/me : " + msg
-    printv(sendType + ": " + msg, 1)
+    #printv(sendType + ": " + msg, 1)
     try:
         sock.send("PRIVMSG #{} :{}\r\n".format(cfg.JOIN, msg).encode('utf-8'))
     except:
