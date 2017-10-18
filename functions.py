@@ -184,8 +184,8 @@ def threadUpdateDatabase(sock):
                             printv("Adding " + viewer + " to database...", 4)
                             insert = {'Name': viewer.lower(), 'Points': 0, 'Rank': 'Chump',
                                       'Multiplier': 1.0, 'Lurker': 'B1', 'TotalPoints': 0,
-                                      'DrinkExpiry': None, 'Drinks': 0, 'Discord': viewer.lower()}
-                            cursor.execute("INSERT INTO Viewers (%s) VALUES %s;", (AsIs(', '.join(insert.keys()), tuple(insert.values()))))
+                                      'Drinks': 0, 'Discord': viewer.lower()}
+                            cursor.execute("INSERT INTO Viewers (%s) VALUES %s;", (AsIs(', '.join(insert.keys())), AsIs(tuple(insert.values()))))
                         cursor.execute("SELECT Points FROM Viewers WHERE name='" + viewer.lower() + "';")
                         currentPoints = cursor.fetchone()[0]
                         printv(viewer + " has " + str(currentPoints) + " points.", 5)
