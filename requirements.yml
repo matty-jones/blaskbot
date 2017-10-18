@@ -6,5 +6,6 @@ dependencies:
 - python
 - six=1.10.0=py35_0
 - pip:
+  - discord
   - requests
   - psycopg2
