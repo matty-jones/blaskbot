@@ -349,7 +349,7 @@ def rank(args):
         currentMultiplier = float(cursor.fetchone()[0])
         nextRank = None
         pointsForNextRank = None
-        for rankPoints in _cfg.ranks.keys():
+        for rankPoints in sorted(_cfg.ranks.keys()):
             nextRank = _cfg.ranks[rankPoints]
             pointsForNextRank = rankPoints
             if totalPoints < rankPoints:
