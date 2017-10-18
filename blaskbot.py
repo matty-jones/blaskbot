@@ -49,7 +49,7 @@ def main():
                             [botComm, cfg.JOIN.lower()]), daemon=True)
     typeAsHost = Process(target=functions.hostChat, args=([hostComm,\
                             os.fdopen(os.dup(sys.stdin.fileno()))]), daemon=True)
-    thankLatest = Process(target=functions.thankLatest, args=([hostComm]),\
+    thankLatest = Process(target=functions.thankLatest, args=([botComm]),\
                          daemon=True)
     # ...and start them
     fillOpList.start()

@@ -413,7 +413,7 @@ def thankLatest(sock):
         if latestUsername != previousUsername:
             chat(sock, "Thank you for the follow, " + latestUsername +\
                  "! Welcome to the BlaskForce!")
-            latestUsername = previousUsername
+            previousUsername = latestUsername
         T.sleep(5)
 
 
