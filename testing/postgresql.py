@@ -147,6 +147,17 @@ def getRandomClip():
     print(clips[index]['url'])
 
 
+def getTop():
+    connection = psycopg2.connect(database='blaskatronic', user='blaskbot')
+    forbidden = ['blaskatronic', 'blaskbot', 'doryx']
+    cursor = connection.cursor(cursor_factory=DictCursor)
+    cursor.execute("SELECT * FROM Viewers WHERE name NOT IN (" + ', '.join([repr(x) for x in forbidden]) + ") ORDER BY totalpoints DESC LIMIT 10;")
+    topRanked = cursor.fetchall()
+    for i, viewerDetails in enumerate(topRanked):
+        #print(i, "|", viewerDetails['name'], "|", viewerDetails['totalpoints'])
+        print("%1d | %15s | %5d" % (i, viewerDetails['name'], viewerDetails['totalpoints']))
+
+
 
 if __name__ == "__main__":
     #try:
@@ -177,7 +188,8 @@ if __name__ == "__main__":
     #updateLurker()
     #getBoth()
     #buyDrink()
-    getRandomClip()
+    #getRandomClip()
+    getTop()
 
     if connection:
         connection.close()
