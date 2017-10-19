@@ -5,6 +5,10 @@ from multiprocessing import Process
 import time as T
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import AsIs
+import sys
+sys.path.append('../')
+import cfg
+import collections
 
 connection = None
 
@@ -173,6 +177,76 @@ def fixViewerDB():
     print(currentViewer)
 
 
+def untilNextCalculation():
+    connection = psycopg2.connect(database='blaskytest', user='blaskbot')
+    userName = 'doryx'
+    cursor = connection.cursor()
+    cursor.execute("SELECT totalpoints FROM Viewers WHERE name='" + userName.lower() + "';")
+    totalPoints = int(cursor.fetchone()[0])
+    cursor.execute("SELECT rank FROM Viewers WHERE name='" + userName.lower() + "';")
+    currentRank = str(cursor.fetchone()[0])
+    cursor.execute("SELECT multiplier FROM Viewers WHERE name='" + userName.lower() + "';")
+    currentMultiplier = float(cursor.fetchone()[0])
+    nextRank = None
+    pointsForNextRank = None
+    print(totalPoints)
+    for rankPoints in sorted(cfg.ranks.keys()):
+        print("iter", rankPoints)
+        nextRank = cfg.ranks[rankPoints]
+        pointsForNextRank = rankPoints
+        if totalPoints < rankPoints:
+            print(totalPoints, rankPoints, "break")
+            break
+    return
+
+    secondsToNextRank = (pointsForNextRank - totalPoints) * int(cfg.awardDeltaT /\
+                            (cfg.pointsToAward * currentMultiplier))
+    totalSecondsSoFar = totalPoints * int(cfg.awardDeltaT / cfg.pointsToAward)
+    totalMins, totalSecs = divmod(totalSecondsSoFar, 60)
+    totalHours, totalMins = divmod(totalMins, 60)
+    totalTimeDict = collections.OrderedDict()
+    totalTimeDict['hour'] = int(totalHours)
+    totalTimeDict['minute'] = int(totalMins)
+    totalTimeDict['second'] = int(totalSecs)
+    totalTimeArray = []
+    mins, secs = divmod(secondsToNextRank, 60)
+    hours, mins = divmod(mins, 60)
+    timeDict = collections.OrderedDict()
+    timeDict['hour'] = int(hours)
+    timeDict['minute'] = int(mins)
+    timeDict['second'] = int(secs)
+    print("Current Points =", totalPoints)
+    print("Points for next rank =", pointsForNextRank)
+    print("Seconds to next rank =", secondsToNextRank)
+    print("Total Seconds So Far =", totalSecondsSoFar)
+    print(totalTimeDict)
+    print(timeDict)
+    return
+
+    timeArray = []
+    for key, value in totalTimeDict.items():
+        if value > 1:
+            totalTimeArray.append(str(value) + " " + str(key) + "s")
+        elif value > 0:
+            totalTimeArray.append(str(value) + " " + str(key))
+    totalTime = ' and '.join(totalTimeArray[-2:])
+    if len(totalTimeArray) == 3:
+        totalTime = totalTimeArray[0] + ", " + totalTime
+    for key, value in timeDict.items():
+        if value > 1:
+            timeArray.append(str(value) + " " + str(key) + "s")
+        elif value > 0:
+            timeArray.append(str(value) + " " + str(key))
+    timeToNext = ' and '.join(timeArray[-2:])
+    if len(timeArray) == 3:
+        timeToNext = timeArray[0] + ", " + timeToNext
+    rankMod = ' '
+    if currentRank[0] in ['a', 'e', 'i', 'o', 'u']:
+        rankMod = 'n '
+    outputLine = userName + " has currently watched for " + totalTime +\
+            " and is a" + rankMod + str(currentRank) +\
+            " (" + timeToNext + " until next rank!)"
+    print(outputLine)
 
 
 if __name__ == "__main__":
@@ -206,7 +280,8 @@ if __name__ == "__main__":
     #buyDrink()
     #getRandomClip()
     #getTop()
-    fixViewerDB()
+    #fixViewerDB()
+    untilNextCalculation()
 
     if connection:
         connection.close()
