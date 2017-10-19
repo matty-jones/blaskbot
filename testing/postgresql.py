@@ -9,6 +9,8 @@ import sys
 sys.path.append('../')
 import cfg
 import collections
+import datetime
+import numpy as np
 
 connection = None
 
@@ -249,6 +251,30 @@ def untilNextCalculation():
     print(outputLine)
 
 
+def timeToNextStream():
+    #streamSchedule = np.array([[1, 20, 30], [3, 20, 30], [5, 11, 30]]) # Pretend this is UTC
+    #now = list(map(int, datetime.datetime.now().strftime("%H %M").split(' ')))
+    streamSchedule = np.array([[1, 20, 30], [3, 20, 30], [5, 11, 30]]) # Pretend this is UTC
+    now = list(map(int, datetime.datetime.now().strftime("%H %M").split(' ')))
+    today = int(datetime.datetime.today().weekday())
+    nowArray = np.array([today] + now)
+    print(nowArray)
+    timeDeltaArray = streamSchedule - nowArray
+    print(timeDeltaArray)
+    modulos = [7, 24, 60]
+    for (x, y), element in np.ndenumerate(timeDeltaArray):
+        if element < 0:
+            timeDeltaArray[x, y] = element%modulos[y]
+            try:
+                # If we can, decrement the next time level up to reflect this change
+                timeDeltaArray[x, y-1] -= 1
+            except:
+                # Don't need to do this for the number of days
+                pass
+    print(timeDeltaArray)
+    print(timeDeltaArray[timeDeltaArray[:,0].argsort()])
+
+
 if __name__ == "__main__":
     #try:
     #    #createTables(cursor)
@@ -281,7 +307,8 @@ if __name__ == "__main__":
     #getRandomClip()
     #getTop()
     #fixViewerDB()
-    untilNextCalculation()
+    #untilNextCalculation()
+    timeToNextStream()
 
     if connection:
         connection.close()
