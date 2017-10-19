@@ -1,9 +1,10 @@
 import cfg
 import discord
 from discord.ext import commands
-import random as R
+import random as _R
 import psycopg2
 import collections
+from psycopg2.extras import DictCursor as _dictCursor
 
 
 commandPrefix = "!"
@@ -96,7 +97,7 @@ async def rank(context):
         currentMultiplier = float(cursor.fetchone()[0])
         nextRank = None
         pointsForNextRank = None
-        for rankPoints in cfg.ranks.keys():
+        for rankPoints in sorted(cfg.ranks.keys()):
             nextRank = cfg.ranks[rankPoints]
             pointsForNextRank = rankPoints
             if totalPoints < rankPoints:
@@ -175,10 +176,10 @@ async def schedule(context):
     await client.say("Blaskatronic TV goes live at 2:30am UTC on Wednesdays and Fridays and 5:30pm UTC on Saturdays!")
 
 
-@client.command(pass_context=True)
-async def test(context):
-    '''Use if you've forgotten the schedule.'''
-    await client.send_message(discord.Object(id='358106199129980929'), "This is a test")
+#@client.command(pass_context=True)
+#async def test(context):
+#    '''Use if you've forgotten the schedule.'''
+#    await client.send_message(discord.Object(id='358106199129980929'), "This is a test")
 
 
 def execute():
