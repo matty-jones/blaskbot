@@ -467,7 +467,7 @@ def pay(args):
     try:
         cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
         coinsAvailable = int(cursor.fetchone()[0])
-        userToPay = args[2]
+        userToPay = args[2].lower()
         amountToPay = int(args[3])
         if amountToPay < 0:
             raise IndexError
