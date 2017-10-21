@@ -1,10 +1,12 @@
 import cfg
 import discord
 from discord.ext import commands
-import random as _R
+import random as R
 import psycopg2
 import collections
-from psycopg2.extras import DictCursor as _dictCursor
+from psycopg2.extras import DictCursor as dictCursor
+from datetime import datetime
+import numpy as np
 
 
 commandPrefix = "!"
@@ -38,10 +40,10 @@ async def dece(context):
 async def clip(context):
     '''Display a random clip for everyone's enjoyment.'''
     connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
-    cursor = connection.cursor(cursor_factory=_dictCursor)
+    cursor = connection.cursor(cursor_factory=dictCursor)
     cursor.execute("SELECT * FROM Clips;")
     clipList = cursor.fetchall()
-    clipNo = int(_R.randrange(len(clipList)))
+    clipNo = int(R.randrange(len(clipList)))
     author = clipList[clipNo]['author']
     url = "https://clips.twitch.tv/" + clipList[clipNo]['url']
     connection.close()
@@ -180,6 +182,68 @@ async def schedule(context):
 #async def test(context):
 #    '''Use if you've forgotten the schedule.'''
 #    await client.send_message(discord.Object(id='358106199129980929'), "This is a test")
+
+@client.command(pass_context=True)
+async def top(context):
+    '''Same as !leaderboard'''
+    await leaderboard.callback(context)
+
+
+@client.command(pass_context=True)
+async def leaderboard(context):
+    '''See the current leaderboard!'''
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
+    cursor = connection.cursor(cursor_factory=dictCursor)
+    cursor.execute("SELECT * FROM Viewers WHERE name NOT IN (" + ', '.join([repr(x) for x in cfg.skipViewers]) + ") ORDER BY totalpoints DESC LIMIT 5;")
+    topRanked = cursor.fetchall()
+    leaderboardLine = "```-----===== CURRENT LEADERBOARD =====----- \n"
+    for i, viewerDetails in enumerate(topRanked):
+        leaderboardLine += "%1d) %15s %15s %6d \n" % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
+    leaderboardLine = leaderboardLine[:-2] + "```"
+    connection.close()
+    await client.say(leaderboardLine)
+
+
+@client.command(pass_context=True)
+async def next(context):
+    '''Tells you how long until the next stream! Now you have no excuse =P'''
+    now = list(map(int, datetime.utcnow().strftime("%H %M").split(' ')))
+    today = int(datetime.utcnow().date().weekday())
+    nowArray = np.array([today] + now)
+    timeDeltaArray = np.array(cfg.streamSchedule) - nowArray
+    modulos = [7, 24, 60]
+    changed = True
+    while changed == True:
+        changed = False
+        for (x, y), element in np.ndenumerate(timeDeltaArray):
+            if element < 0:
+                timeDeltaArray[x, y] = element%modulos[y]
+                # Decrement the next time level up to reflect this change
+                timeDeltaArray[x, y-1] -= 1
+                changed = True
+    nextStreamTime = timeDeltaArray[timeDeltaArray[:,0].argsort()][0]
+    nextStreamDict = collections.OrderedDict()
+    nextStreamDict['day'] = int(nextStreamTime[0])
+    nextStreamDict['hour'] = int(nextStreamTime[1])
+    nextStreamDict['minute'] = int(nextStreamTime[2])
+    outputString = "The next scheduled stream starts in "
+    nonZeroIndices = [index for index, value in enumerate(nextStreamDict.values()) if value != 0]
+    if len(nonZeroIndices) == 1:
+        if nonZeroIndices[0] == 2:
+            outputString += "just "
+        else:
+            outputString += "exactly "
+    timeStrings = []
+    for key, value in nextStreamDict.items():
+        if value > 1:
+            timeStrings.append(str(value) + " " + str(key) + "s")
+        elif value > 0:
+            timeStrings.append(str(value) + " " + str(key))
+    totalTime = ' and '.join(timeStrings[-2:])
+    if len(timeStrings) == 3:
+        totalTime = timeStrings[0] + ", " + totalTime
+    outputString += totalTime
+    await client.say(outputString)
 
 
 def execute():
