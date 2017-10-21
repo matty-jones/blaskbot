@@ -20,7 +20,8 @@ import re as _re
 from html import unescape as _uesc
 import psycopg2
 from psycopg2.extras import DictCursor as _dictCursor
-import collections
+import collections as _collections
+import numpy as _np
 
 
 def time(args):
@@ -292,7 +293,7 @@ def uptime(args):
         currentTime = _datetime.utcnow()
         deltaTime = str(currentTime - createdTime)
         components = _re.match(r"(.*)\:(.*)\:(.*)\.(.*)", deltaTime)
-        componentDict = collections.OrderedDict()
+        componentDict = _collections.OrderedDict()
         componentDict['hour'] = int(components.group(1))
         componentDict['minute'] = int(components.group(2))
         componentDict['second'] = int(components.group(3))
@@ -359,14 +360,14 @@ def rank(args):
         totalSecondsSoFar = totalPoints * int(_cfg.awardDeltaT / _cfg.pointsToAward)
         totalMins, totalSecs = divmod(totalSecondsSoFar, 60)
         totalHours, totalMins = divmod(totalMins, 60)
-        totalTimeDict = collections.OrderedDict()
+        totalTimeDict = _collections.OrderedDict()
         totalTimeDict['hour'] = int(totalHours)
         totalTimeDict['minute'] = int(totalMins)
         totalTimeDict['second'] = int(totalSecs)
         totalTimeArray = []
         mins, secs = divmod(secondsToNextRank, 60)
         hours, mins = divmod(mins, 60)
-        timeDict = collections.OrderedDict()
+        timeDict = _collections.OrderedDict()
         timeDict['hour'] = int(hours)
         timeDict['minute'] = int(mins)
         timeDict['second'] = int(secs)
@@ -565,6 +566,50 @@ def leaderboard(args):
     topRanked = cursor.fetchall()
     leaderboardLine = "--== CURRENT LEADERBOARD ==-- "
     for i, viewerDetails in enumerate(topRanked):
-        leaderboardLine += " %1d) %15s %15s, %5d || " % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
+        leaderboardLine += " %1d) %15s %15s, %5d | " % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
     _chat(sock, leaderboardLine[:-4])
     connection.close()
+
+
+def top(args):
+    leaderboard(args)
+
+
+def next(args):
+    now = list(map(int, datetime.datetime.utcnow().strftime("%H %M").split(' ')))
+    today = int(datetime.datetime.utcnow().date().weekday())
+    nowArray = _np.array([today] + now)
+    timeDeltaArray = _np.array(_cfg.streamSchedule) - nowArray
+    modulos = [7, 24, 60]
+    changed = True
+    while changed == True:
+        changed = False
+        for (x, y), element in _np.ndenumerate(timeDeltaArray):
+            if element < 0:
+                timeDeltaArray[x, y] = element%modulos[y]
+                # Decrement the next time level up to reflect this change
+                timeDeltaArray[x, y-1] -= 1
+                changed = True
+    nextStreamTime = timeDeltaArray[timeDeltaArray[:,0].argsort()][0]
+    nextStreamDict = _collections.OrderedDict()
+    nextStreamDict['day'] = int(nextStreamTime[0])
+    nextStreamDict['hour'] = int(nextStreamTime[1])
+    nextStreamDict['minute'] = int(nextStreamTime[2])
+    outputString = "The next scheduled stream starts in "
+    nonZeroIndices = [index for index, value in enumerate(nextStreamDict.values()) if value != 0]
+    if len(nonZeroIndices) == 1:
+        if nonZeroIndices[0] == 2:
+            outputString += "just "
+        else:
+            outputString += "exactly "
+    timeStrings = []
+    for key, value in nextStreamDict.items():
+        if value > 1:
+            timeStrings.append(str(value) + " " + str(key) + "s")
+        elif value > 0:
+            timeStrings.append(str(value) + " " + str(key))
+    totalTime = ' and '.join(timeStrings[-2:])
+    if len(timeStrings) == 3:
+        totalTime = timeStrings[0] + ", " + totalTime
+    outputString += totalTime
+    _chat(sock, outputString)
