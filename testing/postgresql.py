@@ -254,25 +254,51 @@ def untilNextCalculation():
 def timeToNextStream():
     #streamSchedule = np.array([[1, 20, 30], [3, 20, 30], [5, 11, 30]]) # Pretend this is UTC
     #now = list(map(int, datetime.datetime.now().strftime("%H %M").split(' ')))
-    streamSchedule = np.array([[1, 20, 30], [3, 20, 30], [5, 11, 30]]) # Pretend this is UTC
-    now = list(map(int, datetime.datetime.now().strftime("%H %M").split(' ')))
-    today = int(datetime.datetime.today().weekday())
+    streamSchedule = np.array([[5, 18, 23]]) # Pretend this is UTC
+    #streamSchedule = np.array([[1, 20, 30], [3, 20, 30]]), [5, 11, 30]]) # Pretend this is UTC
+    now = list(map(int, datetime.datetime.utcnow().strftime("%H %M").split(' ')))
+    today = int(datetime.datetime.utcnow().date().weekday())
     nowArray = np.array([today] + now)
     print(nowArray)
     timeDeltaArray = streamSchedule - nowArray
     print(timeDeltaArray)
     modulos = [7, 24, 60]
-    for (x, y), element in np.ndenumerate(timeDeltaArray):
-        if element < 0:
-            timeDeltaArray[x, y] = element%modulos[y]
-            try:
-                # If we can, decrement the next time level up to reflect this change
+    changed = True
+    while changed == True:
+        changed = False
+        for (x, y), element in np.ndenumerate(timeDeltaArray):
+            if element < 0:
+                timeDeltaArray[x, y] = element%modulos[y]
+                # Decrement the next time level up to reflect this change
                 timeDeltaArray[x, y-1] -= 1
-            except:
-                # Don't need to do this for the number of days
-                pass
+                changed = True
     print(timeDeltaArray)
     print(timeDeltaArray[timeDeltaArray[:,0].argsort()])
+    nextStreamTime = timeDeltaArray[timeDeltaArray[:,0].argsort()][0]
+    nextStreamDict = collections.OrderedDict()
+    nextStreamDict['day'] = int(nextStreamTime[0])
+    nextStreamDict['hour'] = int(nextStreamTime[1])
+    nextStreamDict['minute'] = int(nextStreamTime[2])
+    outputString = "The next scheduled stream starts in "
+    nonZeroIndices = [index for index, value in enumerate(nextStreamDict.values()) if value != 0]
+    if len(nonZeroIndices) == 1:
+        if nonZeroIndices[0] == 2:
+            outputString += "just "
+        else:
+            outputString += "exactly "
+    timeStrings = []
+    for key, value in nextStreamDict.items():
+        if value > 1:
+            timeStrings.append(str(value) + " " + str(key) + "s")
+        elif value > 0:
+            timeStrings.append(str(value) + " " + str(key))
+    totalTime = ' and '.join(timeStrings[-2:])
+    if len(timeStrings) == 3:
+        totalTime = timeStrings[0] + ", " + totalTime
+    outputString += totalTime
+    print(outputString)
+
+
 
 
 if __name__ == "__main__":
