@@ -551,7 +551,7 @@ def slot(args):
                 " of the machine for " + userName + "!"
     cursor.execute("UPDATE Viewers SET points=points - " + str(_cfg.slotCost) + " WHERE name='" + userName.lower() + "';")
     cursor.execute("UPDATE Viewers SET points=points + " + str(payout) + " WHERE name='" + userName.lower() + "';")
-    _printv("Username = " + userName + ", Winnings = " + str(payout), 1)
+    _printv("Username = " + userName + "," + responseLine + ", Winnings = " + str(payout), 1)
     _chat(sock, responseLine)
     connection.commit()
     connection.close()
@@ -576,8 +576,10 @@ def top(args):
 
 
 def next(args):
-    now = list(map(int, datetime.datetime.utcnow().strftime("%H %M").split(' ')))
-    today = int(datetime.datetime.utcnow().date().weekday())
+    sock = args[0]
+    userName = args[1]
+    now = list(map(int, _datetime.utcnow().strftime("%H %M").split(' ')))
+    today = int(_datetime.utcnow().date().weekday())
     nowArray = _np.array([today] + now)
     timeDeltaArray = _np.array(_cfg.streamSchedule) - nowArray
     modulos = [7, 24, 60]
