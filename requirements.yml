@@ -9,3 +9,4 @@ dependencies:
   - discord
   - requests
   - psycopg2
+  - numpy
