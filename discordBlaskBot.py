@@ -198,7 +198,7 @@ async def leaderboard(context):
     topRanked = cursor.fetchall()
     leaderboardLine = "```-----===== CURRENT LEADERBOARD =====----- \n"
     for i, viewerDetails in enumerate(topRanked):
-        leaderboardLine += "%1d) %15s %15s %6d \n" % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
+        leaderboardLine += "%1d) %25s %25s %6d \n" % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
     leaderboardLine = leaderboardLine[:-2] + "```"
     connection.close()
     await client.say(leaderboardLine)
