@@ -283,7 +283,7 @@ def getCurrentGame():
     streamData = queryAPI("https://api.twitch.tv/kraken/channels/" + cfg.JOIN)
     try:
         return streamData['game']
-    except KeyError:
+    except:
         return None
 
 
