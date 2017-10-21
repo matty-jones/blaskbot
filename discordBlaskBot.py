@@ -196,9 +196,9 @@ async def leaderboard(context):
     cursor = connection.cursor(cursor_factory=dictCursor)
     cursor.execute("SELECT * FROM Viewers WHERE name NOT IN (" + ', '.join([repr(x) for x in cfg.skipViewers]) + ") ORDER BY totalpoints DESC LIMIT 5;")
     topRanked = cursor.fetchall()
-    leaderboardLine = "```-----===== CURRENT LEADERBOARD =====----- \n"
+    leaderboardLine = "```------====== CURRENT LEADERBOARD ======------ \n"
     for i, viewerDetails in enumerate(topRanked):
-        leaderboardLine += "%1d) %25s %25s %6d \n" % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
+        leaderboardLine += "%1d) %19s %15s %6d \n" % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
     leaderboardLine = leaderboardLine[:-2] + "```"
     connection.close()
     await client.say(leaderboardLine)
