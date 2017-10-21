@@ -20,7 +20,8 @@ owner = 'Blaskatronic'  # Dev name (will grant this person op in the bot to help
 twitterUsername = os.getenv("BOTTWIT")  # The name of the twitter channel to pull latest tweets from
 opList = []  # List of ops. You can leave this empty - BlaskBot will populate this list when the stream is live
 opOnlyCommands = ['subscribe']  # Any commands that you want to be op-only (i.e. viewers can't use them)
-skipViewers = [JOIN.lower(), NICK.lower(), 'doryx', 'fsmimp']  # Place the names of the viewers you'd like to skip in here (skipped viewers do earn blaskoins, but don't earn ranks.
+skipViewers = [JOIN.lower(), NICK.lower(), 'doryx', 'fsmimp']  # Place the names of the viewers you'd like to skip in here.
+                                                               # Skipped viewers do earn blaskoins, but don't earn ranks.
 VLCLUAPASS = os.getenv("VLCLUAPASS")  # This is the password for the LUA HTTP interface created by vlc.
                                       # If you don't know what this is, add 'nowplaying' to the opOnlyCommands
                                       # and never use it.
@@ -28,11 +29,19 @@ EXTERNALIP = subprocess.check_output("dig +short myip.opendns.com @resolver1.ope
 
 
 # Channel Stuff
-streamTitle = "Factorio | Part 3 | Factorio or Fiction?"
-gameTitle = "Factorio"
+streamSchedule = [[2, 2, 30], [4, 2, 30], [6, 17, 30]]  # The stream schedule is given as a list of the form
+                # [[stream1], [stream2], [stream3], ...], where streamX is another list of the form [day, hour, minute].
+                # Note that times are 24 hours and given in UTC, and the week starts on Monday (which is indexed as 0
+                # because this is a proper programming language). For instance, streaming at 8:30pm Mountain Time
+                # (2:30am UTC on the following day) every Tuesday (dayIndex = 1) and Thursday (dayIndex = 3), would be
+                # given as [[2, 2, 30], [4, 2, 30]].
+                # If this makes no sense, just add "next" to the opOnlyCommands and never use it.
+# The next 3 are kinda placeholders as they don't work at the moment.
 # The Twitch API won't let me update communities according to their documentation, so dunno
 # how else to do it.
-#communityList = ['UK_Streamers', 'SupportSmallStreamers', 'VarietyStreaming']
+streamTitle = "STREAM TITLE GOES HERE"
+gameTitle = "STREAM GAME GOES HERE"
+communityList = ['UK_Streamers', 'SupportSmallStreamers', 'VarietyStreaming']
 
 # Viewer Points Database
 pointsToAward = 1  # Award this many points to a viewer...
