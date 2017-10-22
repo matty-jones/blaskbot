@@ -72,8 +72,8 @@ def main():
                 continue
             functions.updateLurkerStatus(username)
             message = CHAT_MSG.sub("", response)
-            if username not in cfg.skipViewers + ['bot']:
-                functions.printv(username + ": " + message, 1)
+            if username != 'bot':
+                functions.printv("\n" + username + ": " + message, 1)
             if len(message) > 0:
                 if message.strip()[0] == "!":
                     # A command has been issued
