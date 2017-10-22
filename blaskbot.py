@@ -57,8 +57,16 @@ def main():
     subscribeTimer.start()
     typeAsHost.start()
     thankLatest.start()
-
+    previousStreamState = False
     while True:
+        currentStreamState = functions.streamIsUp()
+        if currentStreamState != None:
+            if (currentStreamState is True) and (currentStreamState != previousStreamState):
+                printv("STREAM ACTIVE!", 1)
+                previousStreamState = currentStreamState
+            elif (currentStreamState is False) and (currentStreamState != previousStreamState):
+                printv("STREAM INACTIVE!", 1)
+                previousStreamState = currentStreamState
         hostResponse = hostComm.recv(1024).decode("utf-8")
         if hostResponse == "PING :tmi.twitch.tv\r\n":
             hostComm.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
