@@ -564,7 +564,7 @@ def leaderboard(args):
     cursor = connection.cursor(cursor_factory=_dictCursor)
     cursor.execute("SELECT * FROM Viewers WHERE name NOT IN (" + ', '.join([repr(x) for x in _cfg.skipViewers]) + ") ORDER BY totalpoints DESC LIMIT 5;")
     topRanked = cursor.fetchall()
-    leaderboardLine = "--== CURRENT LEADERBOARD ==-- "
+    leaderboardLine = "--== MOST MINUTES WATCHED ==-- "
     for i, viewerDetails in enumerate(topRanked):
         leaderboardLine += " %1d) %15s %15s, %5d | " % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
     _chat(sock, leaderboardLine[:-4])
