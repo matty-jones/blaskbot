@@ -330,7 +330,7 @@ def blaskoins(args):
         else:
             outputLine += "!"
         _chat(sock, outputLine)
-    except IndexError:
+    except (IndexError, TypeError):
         _chat(sock, "I'm sorry, " + userName + ", but I don't have any " + _cfg.currencyName +\
               " data for you yet! Please try again later (and also welcome to the stream ;)).")
     connection.close()
@@ -395,7 +395,7 @@ def rank(args):
                 " and is a" + rankMod + str(currentRank) +\
                 " (" + timeToNext + " until next rank!)"
         _chat(sock, outputLine)
-    except IndexError:
+    except (IndexError, TypeError):
         _chat(sock, "I'm sorry, " + userName + ", but I don't have any rank" +\
               " data for you yet! Please try again later (and also welcome to the stream ;)).")
     connection.close()
