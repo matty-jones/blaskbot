@@ -318,6 +318,8 @@ def isOp(user):
 
 def streamIsUp():
     streamData = queryAPI("https://api.twitch.tv/kraken/streams/" + cfg.JOIN)
+    if streamData is None:
+        return None
     try:
         if not streamData['stream']:
             return False
