@@ -11,7 +11,6 @@ import numpy as np
 
 commandPrefix = "!"
 client = commands.Bot(command_prefix=commandPrefix)
-client.change_presence(game=discord.Game(name="with Blasky's stream!"))
 
 @client.command(pass_context=True)
 async def bb(context):
@@ -270,6 +269,22 @@ async def next(context):
         totalTime = timeStrings[0] + ", " + totalTime
     outputString += totalTime
     await client.say(outputString)
+
+
+#@client.event
+#async def on_message(message):
+#    if message.content.startswith('here come dat boi'):
+#        await client.send_message(message.channel, 'o shit whaddup!')
+
+
+@client.event
+async def on_ready():
+    await client.change_presence(game=discord.Game(name="with Blasky's stream!"))
+
+
+@client.event
+async def on_member_join(member):
+    await client.say("Welcome to the Blaskatronic TV Discord, " + member.name + "!")
 
 
 def execute():
