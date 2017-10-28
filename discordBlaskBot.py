@@ -180,8 +180,34 @@ async def schedule(context):
 
 #@client.command(pass_context=True)
 #async def test(context):
-#    '''Use if you've forgotten the schedule.'''
+#    '''NEVER USE THIS FUNCTION YOU'LL KILL US ALL'''
 #    await client.send_message(discord.Object(id='358106199129980929'), "This is a test")
+
+
+@client.command(pass_context=True)
+async def jackpot(context):
+    '''See the list of games that we have available as potential jackpot wins!'''
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
+    cursor = connection.cursor()
+    cursor.execute("SELECT TITLE FROM Games;")
+    gameNames = cursor.fetchall()
+    gameNamesList = ["```------====== JACKPOTS AVAILABLE FROM !SLOT - PAGE 1 ======------\n"]
+    gameTitles = sorted(list(set(title[0] for title in gameNames)), key=lambda t: t.lower())
+    pageNo = 1
+    currentMessageLength = len(gameNamesList[0])
+    for title in gameTitles:
+        currentMessageLength += len(title) + 1
+        if currentMessageLength > 1996:
+            pageNo += 1
+            gameNamesList[-1] = gameNamesList[-1][:-1] + "```"
+            gameNamesList.append("```------====== JACKPOTS AVAILABLE FROM !SLOT - PAGE " + str(pageNo) + " ======------\n")
+            currentMessageLength = len(gameNamesList[-1]) + len(title) + 1
+        gameNamesList[-1] += title + "\n"
+    gameNamesList[-1] = gameNamesList[-1][:-1] + "```"
+    connection.close()
+    for line in gameNamesList:
+        await client.say(line)
+
 
 @client.command(pass_context=True)
 async def top(context):
