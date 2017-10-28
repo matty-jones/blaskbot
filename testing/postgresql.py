@@ -11,6 +11,7 @@ import cfg
 import collections
 import datetime
 import numpy as np
+import csv
 
 connection = None
 
@@ -299,6 +300,25 @@ def timeToNextStream():
     print(outputString)
 
 
+def insertGames():
+    connection = psycopg2.connect(database='testdb', user='blaskbot')
+    cursor = connection.cursor()
+    cursor.execute("CREATE TABLE Games (ID SERIAL PRIMARY KEY, Owner VARCHAR(25), Title VARCHAR(200), Key VARCHAR(100));")
+    csvFileName = './games.csv'
+    with open(csvFileName, 'r') as csvFile:
+        reader = csv.reader(csvFile, delimiter=';')
+        for row in reader:
+            cursor.execute("INSERT INTO Games (Owner, Title, Key) VALUES (%s, %s, %s);", tuple(row))
+    connection.commit()
+    connection.close()
+
+def getGames():
+    connection = psycopg2.connect(database='testdb', user='blaskbot')
+    cursor = connection.cursor()
+    cursor.execute("SELECT TITLE FROM Games;")
+    gameNames = cursor.fetchall()
+    print(set(x[0] for x in gameNames))
+
 
 
 if __name__ == "__main__":
@@ -334,7 +354,9 @@ if __name__ == "__main__":
     #getTop()
     #fixViewerDB()
     #untilNextCalculation()
-    timeToNextStream()
+    #timeToNextStream()
+    #insertGames()
+    #getGames()
 
     if connection:
         connection.close()
