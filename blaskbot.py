@@ -95,7 +95,7 @@ def main():
                             continue
                     try:
                         getattr(commands, command)(arguments)
-                    except AttributeError as e:
+                    except (AttributeError, TypeError) as e:
                         functions.printv(e, 4)
                         functions.printv("No function by the name " + command + "!", 4)
                 else:
