@@ -9,6 +9,7 @@ from functions import getXMLAttributes as _getXMLAttributes
 from functions import isOp as _isOp
 from functions import printv as _printv
 from functions import getViewerList as _getViewerList
+from functions import streamIsUp as _streamIsUp
 import sys as _sys
 import os as _os
 import cfg as _cfg
@@ -498,6 +499,11 @@ def pay(args):
 def slot(args):
     sock = args[0]
     userName = args[1]
+    streamStatus = _streamIsUp()
+    if streamStatus is not None:
+        if streamStatus is False:
+            _chat(sock, "Sorry, " + userName + ", but you can't win anything off stream! Try using !next to see when you can next play with the slot machine!")
+            return
     connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
