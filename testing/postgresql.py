@@ -309,7 +309,7 @@ def insertGames():
         reader = csv.reader(csvFile, delimiter=';')
         for row in reader:
             cursor.execute("INSERT INTO Games (Owner, Title, Key) VALUES (%s, %s, %s);", tuple(row))
-    connection.commit()
+    #connection.commit()
     connection.close()
 
 def getGames():
@@ -319,6 +319,21 @@ def getGames():
     gameNames = cursor.fetchall()
     print(set(x[0] for x in gameNames))
 
+def addSydGames():
+    connection = psycopg2.connect(database='blaskatronic', user='blaskbot')
+    cursor = connection.cursor()
+    fileName = './sydney_game_keys.txt'
+    with open(fileName, 'r') as fileHandle:
+        data = fileHandle.readlines()
+        for row in data:
+            gameTitle = row[:-1]
+            print(len(gameTitle))
+            cursor.execute("INSERT INTO Games (Owner, Title, Key) VALUES (%s, %s, %s);", ('Sydney', gameTitle, 'Unknown'))
+    #cursor.execute("SELECT TITLE FROM Games where Owner='Sydney';")
+    #gameNames = cursor.fetchall()
+    #print(set(x[0] for x in gameNames))
+    #connection.commit()
+    connection.close()
 
 
 if __name__ == "__main__":
@@ -357,6 +372,7 @@ if __name__ == "__main__":
     #timeToNextStream()
     #insertGames()
     #getGames()
+    #addSydGames()
 
     if connection:
         connection.close()
