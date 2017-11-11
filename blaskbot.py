@@ -66,6 +66,7 @@ def main():
                 previousStreamState = currentStreamState
             elif (currentStreamState is False) and (currentStreamState != previousStreamState):
                 printv("STREAM INACTIVE!", 1)
+                functions.setAllToLurker()
                 previousStreamState = currentStreamState
         hostResponse = hostComm.recv(1024).decode("utf-8")
         if hostResponse == "PING :tmi.twitch.tv\r\n":
