@@ -288,7 +288,7 @@ def getCurrentGame():
 
 
 def getStreamsOfCurrentGame(game, currentViewers):
-    streamsData = queryAPI("https://api.twitch.tv/kraken/streams/?game=" + game)
+    streamsData = queryAPI("https://api.twitch.tv/kraken/streams/?game=" + game + "&limit=100")
     if streamsData is None:
         return None
     streamViewers = []
