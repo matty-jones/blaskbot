@@ -499,6 +499,8 @@ def pay(args):
 def slot(args):
     sock = args[0]
     userName = args[1]
+    if len(args) > 2:
+        return
     streamStatus = _streamIsUp()
     if streamStatus is not None:
         if streamStatus is False:
@@ -573,7 +575,7 @@ def leaderboard(args):
     leaderboardLine = "--== MOST MINUTES WATCHED ==-- "
     for i, viewerDetails in enumerate(topRanked):
         leaderboardLine += " %1d) %15s %15s, %5d | " % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
-    _chat(sock, leaderboardLine[:-4])
+    _chat(sock, leaderboardLine[:-3])
     connection.close()
 
 
