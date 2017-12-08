@@ -605,13 +605,15 @@ def next(args):
     nextStreamDict['day'] = int(nextStreamTime[0])
     nextStreamDict['hour'] = int(nextStreamTime[1])
     nextStreamDict['minute'] = int(nextStreamTime[2])
-    outputString = "The next scheduled stream starts in "
+    outputString = "The next scheduled stream starts"
     nonZeroIndices = [index for index, value in enumerate(nextStreamDict.values()) if value != 0]
-    if len(nonZeroIndices) == 1:
+    if len(nonZeroIndices) == 0:
+        outputString += " right the hell now!"
+    elif len(nonZeroIndices) == 1:
         if nonZeroIndices[0] == 2:
-            outputString += "just "
+            outputString += " in just "
         else:
-            outputString += "exactly "
+            outputString += " in exactly "
     timeStrings = []
     for key, value in nextStreamDict.items():
         if value > 1:
