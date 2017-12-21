@@ -614,6 +614,8 @@ def next(args):
             outputString += " in just "
         else:
             outputString += " in exactly "
+    else:
+        outputString += " in "
     timeStrings = []
     for key, value in nextStreamDict.items():
         if value > 1:

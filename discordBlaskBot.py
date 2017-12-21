@@ -221,9 +221,9 @@ async def leaderboard(context):
     cursor = connection.cursor(cursor_factory=dictCursor)
     cursor.execute("SELECT * FROM Viewers WHERE name NOT IN (" + ', '.join([repr(x) for x in cfg.skipViewers]) + ") ORDER BY totalpoints DESC LIMIT 5;")
     topRanked = cursor.fetchall()
-    leaderboardLine = "```------====== MOST MINUTES WATCHED ======----- \n"
+    leaderboardLine = "```--------======== MOST MINUTES WATCHED ========-------- \n"
     for i, viewerDetails in enumerate(topRanked):
-        leaderboardLine += "%1d) %19s %15s %6d \n" % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
+        leaderboardLine += "%1d) %19s %24s %6d \n" % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
     leaderboardLine = leaderboardLine[:-2] + "```"
     connection.close()
     await client.say(leaderboardLine)
@@ -251,13 +251,17 @@ async def next(context):
     nextStreamDict['day'] = int(nextStreamTime[0])
     nextStreamDict['hour'] = int(nextStreamTime[1])
     nextStreamDict['minute'] = int(nextStreamTime[2])
-    outputString = "The next scheduled stream starts in "
+    outputString = "The next scheduled stream starts"
     nonZeroIndices = [index for index, value in enumerate(nextStreamDict.values()) if value != 0]
-    if len(nonZeroIndices) == 1:
+    if len(nonZeroIndices) == 0:
+        outputString += " right the hell now!"
+    elif len(nonZeroIndices) == 1:
         if nonZeroIndices[0] == 2:
-            outputString += "just "
+            outputString += "in just "
         else:
-            outputString += "exactly "
+            outputString += "in exactly "
+    else:
+        outputString += " in "
     timeStrings = []
     for key, value in nextStreamDict.items():
         if value > 1:
@@ -284,7 +288,9 @@ async def on_ready():
 
 @client.event
 async def on_member_join(member):
-    await client.say("Welcome to the Blaskatronic TV Discord, " + member.name + "!")
+    print("New member joined: ", member)
+    print("DEBUG: ", dir(member))
+    await client.send_message(discord.Object(id='311591108968841238'), "Welcome to the Blaskatronic TV Discord, " + member.mention + "!")
 
 
 def execute():
