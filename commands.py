@@ -586,6 +586,9 @@ def top(args):
 def next(args):
     sock = args[0]
     userName = args[1]
+    if _cfg.streamScheduleOverride is not None:
+        _chat(sock, _cfg.streamScheduleOverride)
+        return
     now = list(map(int, _datetime.utcnow().strftime("%H %M").split(' ')))
     today = int(_datetime.utcnow().date().weekday())
     nowArray = _np.array([today] + now)

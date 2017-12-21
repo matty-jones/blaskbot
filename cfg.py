@@ -36,6 +36,7 @@ streamSchedule = [[2, 2, 30], [4, 2, 30], [6, 17, 30]]  # The stream schedule is
                 # (2:30am UTC on the following day) every Tuesday (dayIndex = 1) and Thursday (dayIndex = 3), would be
                 # given as [[2, 2, 30], [4, 2, 30]].
                 # If this makes no sense, just add "next" to the opOnlyCommands and never use it.
+streamScheduleOverride = None
 # The next 3 are kinda placeholders as they don't work at the moment.
 # The Twitch API won't let me update communities according to their documentation, so dunno
 # how else to do it.

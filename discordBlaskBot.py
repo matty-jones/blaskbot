@@ -232,6 +232,9 @@ async def leaderboard(context):
 @client.command(pass_context=True)
 async def next(context):
     '''Tells you how long until the next stream! Now you have no excuse =P'''
+    if cfg.streamScheduleOverride is not None:
+        await client.say(cfg.streamScheduleOverride)
+        return
     now = list(map(int, datetime.utcnow().strftime("%H %M").split(' ')))
     today = int(datetime.utcnow().date().weekday())
     nowArray = np.array([today] + now)
