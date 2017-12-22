@@ -260,9 +260,9 @@ async def next(context):
         outputString += " right the hell now!"
     elif len(nonZeroIndices) == 1:
         if nonZeroIndices[0] == 2:
-            outputString += "in just "
+            outputString += " in just "
         else:
-            outputString += "in exactly "
+            outputString += " in exactly "
     else:
         outputString += " in "
     timeStrings = []
