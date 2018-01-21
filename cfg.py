@@ -29,7 +29,7 @@ EXTERNALIP = subprocess.check_output("dig +short myip.opendns.com @resolver1.ope
 
 
 # Channel Stuff
-streamSchedule = [[2, 2, 30], [4, 2, 30], [6, 17, 30]]  # The stream schedule is given as a list of the form
+streamSchedule = [[2, 2, 30], [4, 2, 30], [5, 17, 30]]  # The stream schedule is given as a list of the form
                 # [[stream1], [stream2], [stream3], ...], where streamX is another list of the form [day, hour, minute].
                 # Note that times are 24 hours and given in UTC, and the week starts on Monday (which is indexed as 0
                 # because this is a proper programming language). For instance, streaming at 8:30pm Mountain Time
