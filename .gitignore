@@ -8,6 +8,7 @@ configurator.py
 *.db
 *.swo
 *.pem
+*.log
 Images/*
 testing/
 voice/

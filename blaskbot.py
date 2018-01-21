@@ -38,6 +38,7 @@ def main():
     #functions.chat(sock, "Booting up...")
 
     # Fire the one-off functions to be performed on boot
+    functions.checkDatabaseExists()
     functions.setAllToLurker()
 
     # Create asynchronous, recurring child processes...
@@ -48,7 +49,7 @@ def main():
                             [botComm, cfg.JOIN.lower()]), daemon=True)
     typeAsHost = Process(target=functions.hostChat, args=([hostComm,\
                             os.fdopen(os.dup(sys.stdin.fileno()))]), daemon=True)
-    thankLatest = Process(target=functions.thankLatest, args=([hostComm]),\
+    thankLatest = Process(target=functions.thankLatest, args=([botComm]),\
                          daemon=True)
     # ...and start them
     fillOpList.start()
@@ -56,8 +57,17 @@ def main():
     subscribeTimer.start()
     typeAsHost.start()
     thankLatest.start()
-
+    previousStreamState = False
     while True:
+        currentStreamState = functions.streamIsUp()
+        if currentStreamState != None:
+            if (currentStreamState is True) and (currentStreamState != previousStreamState):
+                printv("STREAM ACTIVE!", 1)
+                previousStreamState = currentStreamState
+            elif (currentStreamState is False) and (currentStreamState != previousStreamState):
+                printv("STREAM INACTIVE!", 1)
+                functions.setAllToLurker()
+                previousStreamState = currentStreamState
         hostResponse = hostComm.recv(1024).decode("utf-8")
         if hostResponse == "PING :tmi.twitch.tv\r\n":
             hostComm.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
@@ -71,7 +81,8 @@ def main():
                 continue
             functions.updateLurkerStatus(username)
             message = CHAT_MSG.sub("", response)
-            functions.printv(username + ": " + message, 1)
+            if username != 'bot':
+                functions.printv("\n" + username + ": " + message, 1)
             if len(message) > 0:
                 if message.strip()[0] == "!":
                     # A command has been issued
@@ -85,7 +96,7 @@ def main():
                             continue
                     try:
                         getattr(commands, command)(arguments)
-                    except AttributeError as e:
+                    except (AttributeError, TypeError) as e:
                         functions.printv(e, 4)
                         functions.printv("No function by the name " + command + "!", 4)
                 else:

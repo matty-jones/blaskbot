@@ -6,11 +6,10 @@ can call upon for execution.
 from functions import chat as _chat
 from functions import queryAPI as _queryAPI
 from functions import getXMLAttributes as _getXMLAttributes
-from functions import loadViewersDatabase as _getViewersDB
-from functions import loadClipsDatabase as _getClipsDB
 from functions import isOp as _isOp
 from functions import printv as _printv
 from functions import getViewerList as _getViewerList
+from functions import streamIsUp as _streamIsUp
 import sys as _sys
 import os as _os
 import cfg as _cfg
@@ -20,8 +19,10 @@ import requests as _requests
 from datetime import datetime as _datetime
 import re as _re
 from html import unescape as _uesc
-from tinydb import Query as _Query
-import tinydb.operations as _tdbo
+import psycopg2
+from psycopg2.extras import DictCursor as _dictCursor
+import collections as _collections
+import numpy as _np
 
 
 def time(args):
@@ -75,8 +76,10 @@ def roll(args):
 def buydrink(args):
     sock = args[0]
     userName = args[1]
-    viewerDatabase = _getViewersDB()
-    currentPoints = viewerDatabase.search(_Query().name == userName)[0]['points']
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor()
+    cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
+    currentPoints = int(cursor.fetchone()[0])
     try:
         numberOfDrinks = int(args[2])
         viewersRequested = args[3:]
@@ -130,12 +133,10 @@ def buydrink(args):
     else:
         giveMoneyString = userName + " gives " + str(totalCost) + " " +\
               _cfg.currencyName + "s to the bartender"
-        viewerDatabase.update(_tdbo.subtract('points', totalCost), \
-                              _Query().name == userName)
+        cursor.execute("UPDATE Viewers SET points=points - " + str(totalCost) + " WHERE name='" + userName.lower() + "';")
         if viewersToBuyFor == 'all':
             for viewer in viewerList:
-                viewerDatabase.update(_tdbo.add('drinks', numberOfDrinks), \
-                                      _Query().name == viewer)
+                cursor.execute("UPDATE Viewers SET drinks=drinks + " + str(numberOfDrinks) + " WHERE name='" + viewer.lower() + "';")
             _chat(sock, giveMoneyString + ". Drinks for everyone!")
         else:
             viewersString = viewersToBuyFor[0]
@@ -147,13 +148,14 @@ def buydrink(args):
                         viewersString += ", " + viewer
             viewersString = _re.sub(r'\b' + userName + r'\b', 'themselves', viewersString)
             for viewer in viewersToBuyFor:
-                viewerDatabase.update(_tdbo.add('drinks', numberOfDrinks), \
-                                      _Query().name == viewer)
+                cursor.execute("UPDATE Viewers SET drinks=drinks + " + str(numberOfDrinks) + " WHERE name='" + viewer.lower() + "';")
             if numberOfDrinks == 1:
                 drinkString = "a drink"
             else:
                 drinkString = str(numberOfDrinks) + " drinks"
             _chat(sock, giveMoneyString + " to buy " + viewersString + " " + drinkString + "!")
+    connection.commit()
+    connection.close()
 
 
 def drink(args):
@@ -174,8 +176,10 @@ def drink(args):
         _chat(sock, "That's way too many drinks to have all at once! You'll be chundering " +\
              "everywhere!")
         return 0
-    viewerDatabase = _getViewersDB()
-    totalNumberAllowed = viewerDatabase.search(_Query().name == userName)[0]['drinks']
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor()
+    cursor.execute("SELECT drinks FROM Viewers WHERE name='" + userName.lower() + "';")
+    totalNumberAllowed = int(cursor.fetchone()[0])
     if totalNumberAllowed == 0:
         _chat(sock, "You don't have any drinks, " + userName + "! Maybe a kind soul will buy you one...")
         return 0
@@ -192,15 +196,18 @@ def drink(args):
     else:
         drinkString += "! It doesn't do anything yet except make you feel woozy..."
     _chat(sock, drinkString)
-    viewerDatabase.update(_tdbo.subtract('drinks', numberOfDrinks), \
-                          _Query().name == userName)
+    cursor.execute("UPDATE Viewers SET drinks=drinks - " + str(numberOfDrinks) + " WHERE name='" + userName.lower() + "';")
+    connection.commit()
+    connection.close()
 
 
 def drinks(args):
     sock = args[0]
     userName = args[1]
-    viewerDatabase = _getViewersDB()
-    numberOfDrinks = int(viewerDatabase.search(_Query().name == userName)[0]['drinks'])
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor()
+    cursor.execute("SELECT drinks FROM Viewers WHERE name='" + userName.lower() + "';")
+    numberOfDrinks = int(cursor.fetchone()[0])
     if numberOfDrinks == 0:
         _chat(sock, "You don't have any drinks, " + userName + "! Maybe a kind soul will buy you one...")
         return 0
@@ -209,11 +216,16 @@ def drinks(args):
     else:
         drinkString = str(numberOfDrinks) + " drinks"
     _chat(sock, "You have " + drinkString + ", " + userName + "!")
+    connection.close()
 
 
 def schedule(args):
     sock = args[0]
     _chat(sock, "Blaskatronic TV goes live at 2:30am UTC on Wednesdays and Fridays and 5:30pm UTC on Saturdays!")
+
+
+def commands(args):
+    help(args)
 
 
 def help(args):
@@ -246,14 +258,16 @@ def subscribe(args):
 
 def nowplaying(args):
     sock = args[0]
-    VLCLUAURL = "http://127.0.0.1:8080/requests/status.xml"
+    VLCLUAURL = "http://" + _cfg.EXTERNALIP + ":8080/requests/status.xml"
+    #VLCLUAURL = "http://127.0.0.1:8080/requests/status.xml"
     try:
         nowPlayingData = _requests.get(VLCLUAURL, auth=('',_cfg.VLCLUAPASS))
         VLCDict = _getXMLAttributes(nowPlayingData.content)
         nowPlayingLine = _uesc(VLCDict['information']['meta']['title']) + " by " +\
                 _uesc(VLCDict['information']['meta']['artist'])
         _chat(sock, "We're currently listening to the following song: " + nowPlayingLine)
-    except _requests.exceptions.ConnectionError:
+        _printv(nowPlayingLine, 1)
+    except:
         _chat(sock, "I can't read the now playing data right now! Sorry!")
 
 
@@ -280,9 +294,10 @@ def uptime(args):
         currentTime = _datetime.utcnow()
         deltaTime = str(currentTime - createdTime)
         components = _re.match(r"(.*)\:(.*)\:(.*)\.(.*)", deltaTime)
-        componentDict = {'hour': int(components.group(1)),
-                         'minute': int(components.group(2)),
-                         'second': int(components.group(3))}
+        componentDict = _collections.OrderedDict()
+        componentDict['hour'] = int(components.group(1))
+        componentDict['minute'] = int(components.group(2))
+        componentDict['second'] = int(components.group(3))
         upArray = []
         for key, value in componentDict.items():
             if value > 1:
@@ -298,57 +313,45 @@ def uptime(args):
 def blaskoins(args):
     sock = args[0]
     userName = args[1]
-    viewerDB = _getViewersDB()
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor()
     try:
-        currentPoints = viewerDB.search(_Query().name == userName)[0]['points']
-        totalPoints = viewerDB.search(_Query().name == userName)[0]['totalPoints']
+        cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
+        currentPoints = int(cursor.fetchone()[0])
+        cursor.execute("SELECT totalpoints FROM Viewers WHERE name='" + userName.lower() + "';")
+        totalPoints = int(cursor.fetchone()[0])
         currencyUnits = _cfg.currencyName
         if currentPoints > 1:
             currencyUnits += "s"
-        currentRank = viewerDB.search(_Query().name == userName)[0]['rank']
-        currentMultiplier = viewerDB.search(_Query().name == userName)[0]['multiplier']
-        nextRank = None
-        pointsForNextRank = None
-        for rankPoints in _cfg.ranks.keys():
-            nextRank = _cfg.ranks[rankPoints]
-            pointsForNextRank = rankPoints
-            if totalPoints < rankPoints:
-                break
-        secondsToNextRank = (pointsForNextRank - totalPoints) * int(_cfg.awardDeltaT /\
-                                (_cfg.pointsToAward * currentMultiplier))
-        mins, secs = divmod(secondsToNextRank, 60)
-        hours, mins = divmod(mins, 60)
-        timeDict = {'hour': int(hours), 'minute': int(mins), 'second': int(secs)}
-        timeArray = []
-        for key, value in timeDict.items():
-            if value > 1:
-                timeArray.append(str(value) + " " + str(key) + "s")
-            elif value > 0:
-                timeArray.append(str(value) + " " + str(key))
-        timeToNext = ' and '.join(timeArray[-2:])
-        if len(timeArray) == 3:
-            timeToNext = timeToNext[0] + ", " + timeToNext
-        rankMod = ' '
-        if currentRank[0] in ['a', 'e', 'i', 'o', 'u']:
-            rankMod = 'n '
-        outputLine = userName + " currently has " + str(currentPoints) + " " + str(currencyUnits) + "!"
+        cursor.execute("SELECT multiplier FROM Viewers WHERE name='" + userName.lower() + "';")
+        currentMultiplier = float(cursor.fetchone()[0])
+        outputLine = userName + " currently has " + str(currentPoints) + " " + str(currencyUnits)
+        if currentMultiplier > 1.01:
+            outputLine += ", with an active bonus of {:.2%}!".format(currentMultiplier - 1)
+        else:
+            outputLine += "!"
         _chat(sock, outputLine)
-    except IndexError:
+    except (IndexError, TypeError):
         _chat(sock, "I'm sorry, " + userName + ", but I don't have any " + _cfg.currencyName +\
               " data for you yet! Please try again later (and also welcome to the stream ;)).")
+    connection.close()
 
 
 def rank(args):
     sock = args[0]
     userName = args[1]
-    viewerDB = _getViewersDB()
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor()
     try:
-        totalPoints = viewerDB.search(_Query().name == userName)[0]['totalPoints']
-        currentRank = viewerDB.search(_Query().name == userName)[0]['rank']
-        currentMultiplier = viewerDB.search(_Query().name == userName)[0]['multiplier']
+        cursor.execute("SELECT totalpoints FROM Viewers WHERE name='" + userName.lower() + "';")
+        totalPoints = int(cursor.fetchone()[0])
+        cursor.execute("SELECT rank FROM Viewers WHERE name='" + userName.lower() + "';")
+        currentRank = str(cursor.fetchone()[0])
+        cursor.execute("SELECT multiplier FROM Viewers WHERE name='" + userName.lower() + "';")
+        currentMultiplier = float(cursor.fetchone()[0])
         nextRank = None
         pointsForNextRank = None
-        for rankPoints in _cfg.ranks.keys():
+        for rankPoints in sorted(_cfg.ranks.keys()):
             nextRank = _cfg.ranks[rankPoints]
             pointsForNextRank = rankPoints
             if totalPoints < rankPoints:
@@ -358,11 +361,17 @@ def rank(args):
         totalSecondsSoFar = totalPoints * int(_cfg.awardDeltaT / _cfg.pointsToAward)
         totalMins, totalSecs = divmod(totalSecondsSoFar, 60)
         totalHours, totalMins = divmod(totalMins, 60)
-        totalTimeDict = {'hour': int(totalHours), 'minute': int(totalMins), 'second': int(totalSecs)}
+        totalTimeDict = _collections.OrderedDict()
+        totalTimeDict['hour'] = int(totalHours)
+        totalTimeDict['minute'] = int(totalMins)
+        totalTimeDict['second'] = int(totalSecs)
         totalTimeArray = []
         mins, secs = divmod(secondsToNextRank, 60)
         hours, mins = divmod(mins, 60)
-        timeDict = {'hour': int(hours), 'minute': int(mins), 'second': int(secs)}
+        timeDict = _collections.OrderedDict()
+        timeDict['hour'] = int(hours)
+        timeDict['minute'] = int(mins)
+        timeDict['second'] = int(secs)
         timeArray = []
         for key, value in totalTimeDict.items():
             if value > 1:
@@ -387,24 +396,27 @@ def rank(args):
                 " and is a" + rankMod + str(currentRank) +\
                 " (" + timeToNext + " until next rank!)"
         _chat(sock, outputLine)
-    except IndexError:
+    except (IndexError, TypeError):
         _chat(sock, "I'm sorry, " + userName + ", but I don't have any rank" +\
               " data for you yet! Please try again later (and also welcome to the stream ;)).")
-
+    connection.close()
 
 
 def clip(args):
     sock = args[0]
     additionalArgs = args[1:]
     userName = additionalArgs[0]
-    clipDB = _getClipsDB()
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor(cursor_factory=_dictCursor)
+    cursor.execute("SELECT * FROM Clips;")
+    clipList = cursor.fetchall()
     if len(additionalArgs) == 1:
-        # Just return a random clip (indexed from 1)
-        clipNo = int(_R.randrange(len(clipDB))) + 1
-        url = "https://clips.twitch.tv/" + clipDB.get(eid=clipNo)['url']
-        author = clipDB.get(eid=clipNo)['author']
+        # Just return a random clip
+        clipNo = int(_R.randrange(len(clipList)))
+        url = "https://clips.twitch.tv/" + clipList[clipNo]['url']
+        author = clipList[clipNo]['author']
         _printv("Clip request: " + url, 4)
-        _chat(sock, "Check out this awesome clip (#" + str(clipNo - 1) + "): " + url)
+        _chat(sock, "Check out this awesome clip (#" + str(clipNo) + "): " + url)
     elif additionalArgs[1] == 'add':
         if userName is _isOp():
             try:
@@ -415,43 +427,57 @@ def clip(args):
             except IndexError:
                 _chat(sock, "The correct syntax is !clip add <CLIP SLUG> <AUTHOR>.")
             else:
-                clipsDB.insert({'url': url, 'author': author})
+                cursor.execute("INSERT INTO Clips VALUES (%s, %s);", (url, author))
+                connection.commit()
         else:
             _chat(sock, "A moderator will take a look at your clip and " +\
                   "add it to my database if they like it!")
     elif len(additionalArgs) == 2:
         try:
-            clipNo = int(additionalArgs[1]) + 1
-            if (clipNo > -len(clipDB)) and (clipNo <= len(clipDB)):
-                url = "https://clips.twitch.tv/" + clipDB.get(eid=clipNo)['url']
+            clipNo = int(additionalArgs[1])
+            if (clipNo > -len(clipList)) and (clipNo <= len(clipList)):
+                url = "https://clips.twitch.tv/" + clipList[clipNo]['url']
                 _printv("Clip request: " + url, 4)
-                _chat(sock, "Here is clip #" + str(clipNo - 1) + ": " + url)
+                _chat(sock, "Here is clip #" + str(clipNo) + ": " + url)
             else:
-                _chat(sock, "Valid clip #s are 0 to " + str(len(clipDB) - 1) + " inclusive.")
+                _chat(sock, "Valid clip #s are 0 to " + str(len(clipList) - 1) + " inclusive.")
         except ValueError:
+            # Username specified instead
             clipFromUser = str(additionalArgs[1])
+            cursor.execute("SELECT * FROM Clips WHERE author='" + clipFromUser + "';")
+            userClips = cursor.fetchall()
             userClips = clipDB.search(_Query().author == clipFromUser)
             if len(userClips) > 0:
                 clipToShow = _R.choice(userClips)
                 url = "https://clips.twitch.tv/" + clipToShow['url']
                 _printv("Clip request: " + url, 4)
                 _chat(sock, "Check out " + clipFromUser + "'s awesome clip (#" +\
-                      str(clipToShow.eid - 1) + "): " + url)
+                      str(clipToShow['id'] - 1) + "): " + url)
             else:
                 _chat(sock, "Sorry, there are no clips from " + clipFromUser + " yet.")
     else:
         _chat(sock, "The correct syntax is !clip, !clip #, or !clip <NAME>.")
+    connection.close()
 
 
 def pay(args):
     sock = args[0]
     userName = args[1]
-    viewerDatabase = _getViewersDB()
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor()
     try:
-        userToPay = args[2]
+        cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
+        coinsAvailable = int(cursor.fetchone()[0])
+        userToPay = args[2].lower()
         amountToPay = int(args[3])
         if amountToPay < 0:
             raise IndexError
+        if amountToPay > coinsAvailable:
+            errorString = "You only have", coinsAvailable, _cfg.currencyName
+            if coinsAvailable > 1:
+                errorString += "s"
+            errorString += " available, " + userName + "!"
+            _chat(sock, errorString)
         viewerJSON = _getViewerList()
         viewerList = [viewerName for nameRank in [viewerJSON['chatters'][x] \
                                     for x in viewerJSON['chatters'].keys()] for viewerName \
@@ -459,20 +485,31 @@ def pay(args):
         if userToPay not in viewerList:
             _chat(sock, "I don't see " + userToPay + " in chat!")
             return 0
-        viewerDatabase.update(_tdbo.add('points', amountToPay), _Query().name == userToPay)
-        viewerDatabase.update(_tdbo.subtract('points', amountToPay), _Query().name == userName)
+        cursor.execute("UPDATE Viewers SET points=points + " + str(amountToPay) + " WHERE name='" + userToPay.lower() + "';")
+        cursor.execute("UPDATE Viewers SET points=points - " + str(amountToPay) + " WHERE name='" + userName.lower() + "';")
         payString = userName + " very kindly gives " + userToPay + " " + str(amountToPay) + " of" +\
              " their " + _cfg.currencyName + "s"
         _chat(sock, payString + "!")
     except:
         _chat(sock, "The correct syntax: !pay <USERNAME> <AMOUNT>. There are no defaults!")
+    connection.commit()
+    connection.close()
 
 
 def slot(args):
     sock = args[0]
     userName = args[1]
-    viewerDatabase = _getViewersDB()
-    currentPoints = viewerDatabase.search(_Query().name == userName)[0]['points']
+    if len(args) > 2:
+        return
+    streamStatus = _streamIsUp()
+    if streamStatus is not None:
+        if streamStatus is False:
+            _chat(sock, "Sorry, " + userName + ", but you can't win anything off stream! Try using !next to see when you can next play with the slot machine!")
+            return
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor()
+    cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
+    currentPoints = int(cursor.fetchone()[0])
     if currentPoints < _cfg.slotCost:
         _chat(sock, "Sorry, " + userName + ", but you do not have enough" + _cfg.currencyName +\
               " to play! You need at least " + str(_cfg.slotCost) + ".")
@@ -520,7 +557,76 @@ def slot(args):
     elif payout > 1:
         responseLine += " " + str(payout) + " " + _cfg.currencyName + "s clatter out" +\
                 " of the machine for " + userName + "!"
-    viewerDatabase.update(_tdbo.subtract('points', 10), _Query().name == userName)
-    viewerDatabase.update(_tdbo.add('points', payout), _Query().name == userName)
-    _printv("Username = " + userName + ", Result = " + responseLine + ", Winnings = " + str(payout), 1)
+    cursor.execute("UPDATE Viewers SET points=points - " + str(_cfg.slotCost) + " WHERE name='" + userName.lower() + "';")
+    cursor.execute("UPDATE Viewers SET points=points + " + str(payout) + " WHERE name='" + userName.lower() + "';")
+    _printv("Username = " + userName + "," + responseLine + ", Winnings = " + str(payout), 1)
     _chat(sock, responseLine)
+    connection.commit()
+    connection.close()
+
+
+def leaderboard(args):
+    sock = args[0]
+    userName = args[1]
+    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    cursor = connection.cursor(cursor_factory=_dictCursor)
+    cursor.execute("SELECT * FROM Viewers WHERE name NOT IN (" + ', '.join([repr(x) for x in _cfg.skipViewers]) + ") ORDER BY totalpoints DESC LIMIT 5;")
+    topRanked = cursor.fetchall()
+    leaderboardLine = "--== MOST MINUTES WATCHED ==-- "
+    for i, viewerDetails in enumerate(topRanked):
+        leaderboardLine += " %1d) %15s %15s, %5d | " % (i + 1, viewerDetails['rank'], viewerDetails['name'], viewerDetails['totalpoints'])
+    _chat(sock, leaderboardLine[:-3])
+    connection.close()
+
+
+def top(args):
+    leaderboard(args)
+
+
+def next(args):
+    sock = args[0]
+    userName = args[1]
+    if _cfg.streamScheduleOverride is not None:
+        _chat(sock, _cfg.streamScheduleOverride)
+        return
+    now = list(map(int, _datetime.utcnow().strftime("%H %M").split(' ')))
+    today = int(_datetime.utcnow().date().weekday())
+    nowArray = _np.array([today] + now)
+    timeDeltaArray = _np.array(_cfg.streamSchedule) - nowArray
+    modulos = [7, 24, 60]
+    changed = True
+    while changed == True:
+        changed = False
+        for (x, y), element in _np.ndenumerate(timeDeltaArray):
+            if element < 0:
+                timeDeltaArray[x, y] = element%modulos[y]
+                # Decrement the next time level up to reflect this change
+                timeDeltaArray[x, y-1] -= 1
+                changed = True
+    nextStreamTime = timeDeltaArray[timeDeltaArray[:,0].argsort()][0]
+    nextStreamDict = _collections.OrderedDict()
+    nextStreamDict['day'] = int(nextStreamTime[0])
+    nextStreamDict['hour'] = int(nextStreamTime[1])
+    nextStreamDict['minute'] = int(nextStreamTime[2])
+    outputString = "The next scheduled stream starts"
+    nonZeroIndices = [index for index, value in enumerate(nextStreamDict.values()) if value != 0]
+    if len(nonZeroIndices) == 0:
+        outputString += " right the hell now!"
+    elif len(nonZeroIndices) == 1:
+        if nonZeroIndices[0] == 2:
+            outputString += " in just "
+        else:
+            outputString += " in exactly "
+    else:
+        outputString += " in "
+    timeStrings = []
+    for key, value in nextStreamDict.items():
+        if value > 1:
+            timeStrings.append(str(value) + " " + str(key) + "s")
+        elif value > 0:
+            timeStrings.append(str(value) + " " + str(key))
+    totalTime = ' and '.join(timeStrings[-2:])
+    if len(timeStrings) == 3:
+        totalTime = timeStrings[0] + ", " + totalTime
+    outputString += totalTime
+    _chat(sock, outputString)

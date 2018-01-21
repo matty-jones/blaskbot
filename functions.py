@@ -12,10 +12,10 @@ import time as T
 import os
 import sys
 import socket
-from tinydb import TinyDB, Query
-import tinydb.operations as tdbo
 from multiprocessing import Value
 import xml.etree.ElementTree as ET
+import psycopg2
+from psycopg2.extensions import AsIs
 
 defaultHeader = {"Authorization":'OAuth ' + str(cfg.PASS).split(':')[1]}
 # This is a global variable, but needs to be shared between timer subprocesses
@@ -70,11 +70,11 @@ def chat(sock, msg, sendType='bot'):
     command = False
     if sendType == 'bot':
         msg = "/me : " + msg
-    printv(sendType + ": " + msg, 1)
+    #printv(sendType + ": " + msg, 1)
     try:
         sock.send("PRIVMSG #{} :{}\r\n".format(cfg.JOIN, msg).encode('utf-8'))
     except:
-        printv("ERROR: " + repr(sys.exec_info()[0]) + ", MESSAGE NOT SENT", 1)
+        printv("ERROR: " + repr(sys.exc_info()[0]) + ", MESSAGE NOT SENT", 1)
 
 
 def ban(sock, user):
@@ -132,11 +132,31 @@ def threadFillOpList():
         T.sleep(5)
 
 
+def checkDatabaseExists():
+    try:
+        connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
+    except psycopg2.OperationalError:
+        printv("The database '" + cfg.JOIN + "' doesn't exist! Creating it now using the postgres superadmin user...", 1)
+        tempConnect = psycopg2.connect(database='postgres', user='postgres')
+        tempConnect.autocommit = True
+        tempConnect.cursor().execute('CREATE DATABASE {} OWNER {};'.format(cfg.JOIN, cfg.NICK))
+        tempConnect.close()
+        connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
+        cursor = connection.cursor()
+        printv("Constructing the Viewers Table...", 1)
+        cursor.execute("CREATE TABLE Viewers (ID SERIAL PRIMARY KEY, Name VARCHAR(25), Points SMALLINT, Rank VARCHAR(25), Multiplier FLOAT, Lurker BIT, TotalPoints SMALLINT, DrinkExpiry TIME, Drinks SMALLINT, Discord VARCHAR(25));")
+        printv("Constructing the Clips Table...", 1)
+        cursor.execute("CREATE TABLE Clips (ID SERIAL PRIMARY KEY, URL VARCHAR(70), Author VARCHAR(25));")
+        printv("Empty database created. Returning to main program.", 1)
+    connection.close()
+
+
 def threadUpdateDatabase(sock):
     printv("Loading the viewer database...", 5)
-    viewerDatabase = loadViewersDatabase()
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
+    cursor = connection.cursor()
     printv("Database loaded!", 5)
-    skipViewers = ['blaskatronic', 'blaskbot', 'doryx']
+    skipViewers = cfg.skipViewers
     previousViewers = []
     while True:
         if streamIsUp():
@@ -159,66 +179,84 @@ def threadUpdateDatabase(sock):
                                " points...", 5)
                         printv("Checking if " + viewer + " is in database...", 4)
                         # Check if viewer is already in the database
-                        if len(viewerDatabase.search(Query().name == viewer)) == 0:
+                        cursor.execute("SELECT EXISTS (SELECT 1 FROM Viewers WHERE Name='" + viewer.lower() + "');")
+                        if not cursor.fetchone()[0]:
                             printv("Adding " + viewer + " to database...", 4)
-                            viewerDatabase.insert({'name': viewer, 'points': 0, 'rank': 'None',
-                                                   'multiplier': 1, 'lurker': 'true', 'totalPoints': 0,
-                                                   'drinks': 0, 'drinkExpiry': None})
-                        printv(viewer + " has " + str(viewerDatabase.search(Query().name ==\
-                                viewer)[0]['points']) + " points.", 5)
+                            insert = {'Name': viewer.lower(), 'Points': 0, 'Rank': 'Chump',
+                                      'Multiplier': 1.0, 'Lurker': 'B1', 'TotalPoints': 0,
+                                      'Drinks': 0, 'Discord': viewer.lower()}
+                            cursor.execute("INSERT INTO Viewers (%s) VALUES %s;", (AsIs(', '.join(insert.keys())), AsIs(tuple(insert.values()))))
+                        cursor.execute("SELECT Points FROM Viewers WHERE name='" + viewer.lower() + "';")
+                        currentPoints = cursor.fetchone()[0]
+                        printv(viewer + " has " + str(currentPoints) + " points.", 5)
                         printv("Incrementing " + viewer + "'s points...", 4)
-                        viewerDatabase.update(tdbo.add('points', cfg.pointsToAward), \
-                                              Query().name == viewer)
+                        cursor.execute("UPDATE Viewers SET points=points + " + str(cfg.pointsToAward) + " WHERE name='" + viewer.lower() + "';")
                         # Also increment `totalPoints' which is used to keep track of
                         # view time without taking into account minigame losses
-                        viewerDatabase.update(tdbo.add('totalPoints', cfg.pointsToAward), \
-                                              Query().name == viewer)
-                        if viewer in skipViewers:
+                        cursor.execute("SELECT totalpoints FROM Viewers WHERE name='" + viewer.lower() + "';")
+                        currentTotalPoints = cursor.fetchone()[0]
+                        cursor.execute("UPDATE Viewers SET totalpoints=totalpoints + " + str(cfg.pointsToAward) + " WHERE name='" + viewer.lower() + "';")
+                        if viewer.lower() in skipViewers:
                             continue
                         printv("Calculating " + viewer + "'s rank...", 5)
-                        currentPoints = viewerDatabase.search(Query().name == viewer)[0]['points']
-                        currentTotalPoints = viewerDatabase.search(Query().name == viewer)[0]['totalPoints']
-                        oldRank = viewerDatabase.search(Query().name == viewer)[0]['rank']
+                        currentPoints += cfg.pointsToAward
+                        currentTotalPoints += cfg.pointsToAward
+                        cursor.execute("SELECT rank FROM Viewers WHERE name='" + viewer.lower() + "';")
+                        oldRank = cursor.fetchone()[0]
                         newRank = str(oldRank)
                         for rankPoints in sorted(cfg.ranks.keys()):
                             if int(currentTotalPoints) < int(rankPoints):
                                 break
                             newRank = cfg.ranks[rankPoints]
                         if newRank != oldRank:
-                            viewerDatabase.update(tdbo.set('rank', newRank), Query().name == viewer)
-                            if (viewerDatabase.search(Query().name == viewer)[0]['lurker'] == 'false') and\
-                                (viewer not in skipViewers):
+                            cursor.execute("UPDATE Viewers SET rank=(%s) WHERE name='" + viewer.lower() + "';", tuple([newRank]))
+                            cursor.execute("SELECT lurker FROM Viewers WHERE name='" + viewer.lower() + "';")
+                            lurker = bool(int(cursor.fetchone()[0]))
+                            if not lurker:
                                 currencyUnits = cfg.currencyName
                                 if currentPoints > 1:
                                     currencyUnits += "s"
                                 chat(sock, "Congratulations " + viewer + ", you have been promoted" +\
                                      " to the rank of " + newRank + "! You now have " +\
                                      str(currentPoints) + " " + currencyUnits + " to spend!")
-                        printv(viewer + " now has " + str(viewerDatabase.search(Query().name ==\
-                                viewer)[0]['totalPoints']) + " points, and " + \
+                        cursor.execute("SELECT (points, totalpoints) FROM Viewers WHERE name='" + viewer.lower() + "';")
+                        data = cursor.fetchone()[0]
+                        (currentPoints, currentTotalPoints) = eval(data)
+                        printv(viewer + " now has " + str(currentTotalPoints) + " points, and " + \
                                str(currentPoints) + " to spend on minigames.", 5)
                 previousViewers = flattenedViewerList[:]
         else:
             printv("Stream not currently up. Not adding points.", 4)
-        printv("Database now looks like this: " + repr(viewerDatabase.all()), 5)
+        connection.commit()
+        cursor.execute("SELECT * FROM Viewers;")
+        allViewers = cursor.fetchall()
+        printv("Database now looks like this: " + repr(allViewers), 5)
         T.sleep(cfg.awardDeltaT)
 
 
-def updateLurkerStatus(username):
-    viewerDB = loadViewersDatabase()
+def updateLurkerStatus(viewer):
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
+    cursor = connection.cursor()
     try:
-        if viewerDB.search(Query().name == username)[0]['lurker'] == 'true':
-            printv(username + " spoke, so disabling lurker mode.", 5)
-            viewerDB.update(tdbo.set('lurker', 'false'), Query().name == username)
-    except IndexError as e:
+        cursor.execute("SELECT lurker FROM Viewers WHERE name='" + viewer.lower() + "';")
+        lurker = bool(int(cursor.fetchone()[0]))
+        if lurker:
+            printv(viewer + " spoke, so disabling lurker mode.", 5)
+            cursor.execute("UPDATE Viewers SET lurker=(%s) WHERE name='" + viewer.lower() + "';", tuple(['B0']))
+    except:
         # Happens when the response is not yet in DB
-        printv("Error updating lurker status for " + username + ": " + str(e), 5)
+        printv("Error updating lurker status for " + viewer + ": " + repr(sys.exc_info()[0]), 5)
         pass
+    connection.commit()
+    connection.close()
 
 
 def setAllToLurker():
-    viewerDB = loadViewersDatabase()
-    viewerDB.update(tdbo.set('lurker', 'true'), Query().name.exists())
+    connection = psycopg2.connect(database=cfg.JOIN.lower(), user=cfg.NICK.lower())
+    cursor = connection.cursor()
+    cursor.execute("UPDATE Viewers SET lurker=(%s);", tuple(['B1']))
+    connection.commit()
+    connection.close()
 
 
 def getStreamRank(currentViewerCount):
@@ -233,16 +271,6 @@ def getStreamRank(currentViewerCount):
     return returnString
 
 
-def loadViewersDatabase():
-    viewerDB = TinyDB('./databases/' + cfg.JOIN + 'Viewers.db')
-    return viewerDB
-
-
-def loadClipsDatabase():
-    clipsDB = TinyDB('./databases/' + cfg.JOIN + 'Clips.db')
-    return clipsDB
-
-
 def getViewerList():
     viewerData = queryAPI("http://tmi.twitch.tv/group/user/" +\
                           cfg.JOIN + "/chatters", header={"User-Agent": \
@@ -255,12 +283,12 @@ def getCurrentGame():
     streamData = queryAPI("https://api.twitch.tv/kraken/channels/" + cfg.JOIN)
     try:
         return streamData['game']
-    except KeyError:
+    except:
         return None
 
 
 def getStreamsOfCurrentGame(game, currentViewers):
-    streamsData = queryAPI("https://api.twitch.tv/kraken/streams/?game=" + game)
+    streamsData = queryAPI("https://api.twitch.tv/kraken/streams/?game=" + game + "&limit=100")
     if streamsData is None:
         return None
     streamViewers = []
@@ -290,6 +318,8 @@ def isOp(user):
 
 def streamIsUp():
     streamData = queryAPI("https://api.twitch.tv/kraken/streams/" + cfg.JOIN)
+    if streamData is None:
+        return None
     try:
         if not streamData['stream']:
             return False
@@ -385,7 +415,7 @@ def thankLatest(sock):
         if latestUsername != previousUsername:
             chat(sock, "Thank you for the follow, " + latestUsername +\
                  "! Welcome to the BlaskForce!")
-            latestUsername = previousUsername
+            previousUsername = latestUsername
         T.sleep(5)
 
 
