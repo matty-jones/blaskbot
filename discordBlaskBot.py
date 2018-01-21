@@ -234,48 +234,48 @@ async def next(context):
     '''Tells you how long until the next stream! Now you have no excuse =P'''
     if cfg.streamScheduleOverride is not None:
         await client.say(cfg.streamScheduleOverride)
-        return
-    now = list(map(int, datetime.utcnow().strftime("%H %M").split(' ')))
-    today = int(datetime.utcnow().date().weekday())
-    nowArray = np.array([today] + now)
-    timeDeltaArray = np.array(cfg.streamSchedule) - nowArray
-    modulos = [7, 24, 60]
-    changed = True
-    while changed == True:
-        changed = False
-        for (x, y), element in np.ndenumerate(timeDeltaArray):
-            if element < 0:
-                timeDeltaArray[x, y] = element%modulos[y]
-                # Decrement the next time level up to reflect this change
-                timeDeltaArray[x, y-1] -= 1
-                changed = True
-    nextStreamTime = timeDeltaArray[timeDeltaArray[:,0].argsort()][0]
-    nextStreamDict = collections.OrderedDict()
-    nextStreamDict['day'] = int(nextStreamTime[0])
-    nextStreamDict['hour'] = int(nextStreamTime[1])
-    nextStreamDict['minute'] = int(nextStreamTime[2])
-    outputString = "The next scheduled stream starts"
-    nonZeroIndices = [index for index, value in enumerate(nextStreamDict.values()) if value != 0]
-    if len(nonZeroIndices) == 0:
-        outputString += " right the hell now!"
-    elif len(nonZeroIndices) == 1:
-        if nonZeroIndices[0] == 2:
-            outputString += " in just "
-        else:
-            outputString += " in exactly "
     else:
-        outputString += " in "
-    timeStrings = []
-    for key, value in nextStreamDict.items():
-        if value > 1:
-            timeStrings.append(str(value) + " " + str(key) + "s")
-        elif value > 0:
-            timeStrings.append(str(value) + " " + str(key))
-    totalTime = ' and '.join(timeStrings[-2:])
-    if len(timeStrings) == 3:
-        totalTime = timeStrings[0] + ", " + totalTime
-    outputString += totalTime
-    await client.say(outputString)
+        now = list(map(int, datetime.utcnow().strftime("%H %M").split(' ')))
+        today = int(datetime.utcnow().date().weekday())
+        nowArray = np.array([today] + now)
+        timeDeltaArray = np.array(cfg.streamSchedule) - nowArray
+        modulos = [7, 24, 60]
+        changed = True
+        while changed == True:
+            changed = False
+            for (x, y), element in np.ndenumerate(timeDeltaArray):
+                if element < 0:
+                    timeDeltaArray[x, y] = element%modulos[y]
+                    # Decrement the next time level up to reflect this change
+                    timeDeltaArray[x, y-1] -= 1
+                    changed = True
+        nextStreamTime = timeDeltaArray[timeDeltaArray[:,0].argsort()][0]
+        nextStreamDict = collections.OrderedDict()
+        nextStreamDict['day'] = int(nextStreamTime[0])
+        nextStreamDict['hour'] = int(nextStreamTime[1])
+        nextStreamDict['minute'] = int(nextStreamTime[2])
+        outputString = "The next scheduled stream starts"
+        nonZeroIndices = [index for index, value in enumerate(nextStreamDict.values()) if value != 0]
+        if len(nonZeroIndices) == 0:
+            outputString += " right the hell now!"
+        elif len(nonZeroIndices) == 1:
+            if nonZeroIndices[0] == 2:
+                outputString += " in just "
+            else:
+                outputString += " in exactly "
+        else:
+            outputString += " in "
+        timeStrings = []
+        for key, value in nextStreamDict.items():
+            if value > 1:
+                timeStrings.append(str(value) + " " + str(key) + "s")
+            elif value > 0:
+                timeStrings.append(str(value) + " " + str(key))
+        totalTime = ' and '.join(timeStrings[-2:])
+        if len(timeStrings) == 3:
+            totalTime = timeStrings[0] + ", " + totalTime
+        outputString += totalTime
+        await client.say(outputString)
 
 
 #@client.event
