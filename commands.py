@@ -629,4 +629,6 @@ def next(args):
     if len(timeStrings) == 3:
         totalTime = timeStrings[0] + ", " + totalTime
     outputString += totalTime
+    if len(_cfg.streamScheduleAdditional) > 0:
+        outputString += " " + _cfg.streamScheduleAdditional
     _chat(sock, outputString)
