@@ -389,7 +389,9 @@ def getXMLAttributes(xmlData):
 def queryAPI(URL, header=defaultHeader):
     try:
         data = requests.get(URL, headers=header).json()
-        if "error" in data.keys():
+        if len(data) == 0:
+            return None
+        elif "error" in data.keys():
             raise URLError
         printv("Json loaded!", 5)
         return data
