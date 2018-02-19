@@ -111,6 +111,15 @@ The prerequisites are stored in requirements.yml and this file will be updated w
     * After installation, the environment can be activated using `source activate blaskbot`. The environment will need to be active for the bot the run.
 
 
+### Testing the bot ###
+Testing is done with the stdlib unittest and they are found in `tests/`. There are only tests for a single command currently.
+To run the tests:
+
+```
+python -m unittest
+```
+
+
 ### Running the bot ###
 Simple! Activate the blaskbot conda environment and invoke `python blaskbot.py`!
 If you desire a trimmed-down version of BlaskBot for your Discord channel, please run `python discordBlaskBot.py`.

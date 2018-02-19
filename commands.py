@@ -24,6 +24,11 @@ from psycopg2.extras import DictCursor as _dictCursor
 import collections as _collections
 import numpy as _np
 
+BAD_ARG_RESPONSE = {
+    "roll": "I don't know what to roll! Try specifying a"
+            "die using something like: !roll 20 or !roll 2d6",
+}
+
 
 def time(args):
     sock = args[0]
@@ -57,20 +62,53 @@ def discord(args):
 
 
 def roll(args):
-    sock = args[0]
+
+    # parse args
     try:
-        dsides = int(args[2])
-        rollNumber = _R.randint(1, dsides)
-        rollString = "I rolled a D" + str(dsides)
-        if dsides > 20:
-            rollString += " (it was a REALLY big one)"
-        rollString += ", and got " + str(rollNumber) + "."
-        _chat(sock, rollString)
-    except (IndexError, ValueError) as e:
-        if isinstance(e, IndexError):
-            _chat(sock, "I don't know what to roll! Try specifying a die using something like: !roll 20")
-        elif isinstance(e, ValueError):
-            _chat(sock, "Pfff, it makes no sense to roll that. I'm not doing it.")
+        rollArg = args[2].lower()
+    except IndexError:
+        return BAD_ARG_RESPONSE["roll"]
+
+    # parse rollArg to allow for a d, ie: 3d4 to roll 3 dice with 4 sides each
+    rollList = rollArg.split('d')
+    if len(rollList) == 1:  # There was no d in the rollArg
+        rollList = [1] + rollList  # Make the list in the correct format, ie: [1, 4]
+    if len(rollList) != 2:  # Correct format, ie [3, 4]
+        return BAD_ARG_RESPONSE["roll"]
+
+    # get the int values for the roll
+    try :
+        rolls = int(rollList[0])
+    except ValueError:
+        if rollList[0] == '':  # this means we get a d3
+            rolls = 1
+        else:
+            return BAD_ARG_RESPONSE["roll"]
+
+    # get the int values for the sides
+    try :
+        dSides = int(rollList[1])
+    except ValueError:
+        return BAD_ARG_RESPONSE["roll"]
+
+    # check for negetives and zeros
+    if min([rolls, dSides]) <= 0:
+        return BAD_ARG_RESPONSE["roll"]
+
+    # Use a generator to get the list of rolls
+    result = [str(_R.randint(1, dSides)) for _ in range(rolls)]
+    # format the result to be a string
+    result = str.join(', ', result)
+    # No one wants to say 1 dice
+    diceWord = 'die' if rolls == 1 else 'dice'
+    fmt = {
+        'rolls': rolls,
+        'diceWord': diceWord,
+        'dSides': dSides,
+        'result': result,
+    }
+    return "I rolled {rolls} {diceWord} with " \
+           "{dSides} sides and got {result}".format(**fmt)
 
 
 def buydrink(args):
