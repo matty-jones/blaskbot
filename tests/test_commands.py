@@ -1,21 +1,41 @@
 from unittest import TestCase
+import os
+
+os.environ["BOTNICK"] = "bot"
+os.environ["BOTCHAT"] = "bot"
+os.environ["BOTAUTH"] = "oauth:bot"
+
+
 import commands
 from commands import roll
 
-def fake_sock():
-    pass
+
+class TestSock(object):
+    """
+    _chat gets called and then calls the `send` method of the passed sock. Here
+    we are returning the message so that the test can be on the returned string
+    not send the message to the irc server.
+    """
+    def send(self, msg):
+        return str(msg)
+
+
+testSock = TestSock()
 
 
 class TestCommand(TestCase):
     command = ""
-    badResponse = ""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        cmdErr = commands.BAD_ARG_RESPONSE[self.command]
+        self.badResponse = "/me : {}".format(cmdErr)
 
     def cmdResponse(self, addArgs):
         addArgs = addArgs if isinstance(addArgs, list) else [addArgs]
         self.args += addArgs
         cmd = getattr(commands, self.command)
         return cmd(self.args)
-
 
     def shouldPass(self, addArgs, expect=None):
         expect = expect if expect else self.badResponse
@@ -30,7 +50,7 @@ class TestCommand(TestCase):
                          expect)
 
     def setUp(self):
-        self.args = [fake_sock, "test_user"]
+        self.args = [testSock, "test_user"]
 
     def tearDown(self):
         del self.args
@@ -38,7 +58,6 @@ class TestCommand(TestCase):
 
 class TestRoll(TestCommand):
     command = "roll"
-    badResponse = commands.BAD_ARG_RESPONSE["roll"]
 
     # edge cases
     def test_no_arg(self):
