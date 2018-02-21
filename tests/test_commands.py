@@ -1,6 +1,11 @@
 from unittest import TestCase
 import os
 
+# set environ vars so when cfg.py is called, it gets
+# test enviroment vars
+oldBotNick = os.environ.get("BOTNICK", "")
+oldBotChat = os.environ.get("BOTCHAT", "")
+oldBotAuth = os.environ.get("BOTAUTH", "")
 os.environ["BOTNICK"] = "bot"
 os.environ["BOTCHAT"] = "bot"
 os.environ["BOTAUTH"] = "oauth:bot"
@@ -8,6 +13,12 @@ os.environ["BOTAUTH"] = "oauth:bot"
 
 import commands
 from commands import roll
+
+
+# Reset the old enviroment vars
+os.environ["BOTNICK"] = oldBotNick
+os.environ["BOTCHAT"] = oldBotChat
+os.environ["BOTAUTH"] = oldBotAuth
 
 
 class TestSock(object):
