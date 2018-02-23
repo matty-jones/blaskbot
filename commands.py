@@ -24,7 +24,7 @@ from psycopg2.extras import DictCursor as _dictCursor
 import collections as _collections
 import numpy as _np
 
-BAD_ARG_RESPONSE = {
+_BAD_ARG_RESPONSE = {
     "roll": "I don't know what to roll! Try specifying a "
             "die using something like: !roll 20 or !roll 2d6",
 }
