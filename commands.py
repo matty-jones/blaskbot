@@ -20,7 +20,7 @@ from datetime import datetime as _datetime
 import re as _re
 from html import unescape as _uesc
 import psycopg2 as __psycopg2
-from _psycopg2.extras import DictCursor as _dictCursor
+from psycopg2.extras import DictCursor as _dictCursor
 import collections as _collections
 import numpy as _np
 
