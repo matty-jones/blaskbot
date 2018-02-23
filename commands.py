@@ -19,7 +19,7 @@ import requests as _requests
 from datetime import datetime as _datetime
 import re as _re
 from html import unescape as _uesc
-import psycopg2
+import psycopg2 as __psycopg2
 from psycopg2.extras import DictCursor as _dictCursor
 import collections as _collections
 import numpy as _np
@@ -140,7 +140,7 @@ def roll(args):
 def buydrink(args):
     sock = args[0]
     userName = args[1]
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = _psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
     currentPoints = int(cursor.fetchone()[0])
@@ -240,7 +240,7 @@ def drink(args):
         _chat(sock, "That's way too many drinks to have all at once! You'll be chundering " +\
              "everywhere!")
         return 0
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = _psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("SELECT drinks FROM Viewers WHERE name='" + userName.lower() + "';")
     totalNumberAllowed = int(cursor.fetchone()[0])
@@ -268,7 +268,7 @@ def drink(args):
 def drinks(args):
     sock = args[0]
     userName = args[1]
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = _psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("SELECT drinks FROM Viewers WHERE name='" + userName.lower() + "';")
     numberOfDrinks = int(cursor.fetchone()[0])
@@ -377,7 +377,7 @@ def uptime(args):
 def blaskoins(args):
     sock = args[0]
     userName = args[1]
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = _psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     try:
         cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
@@ -404,7 +404,7 @@ def blaskoins(args):
 def rank(args):
     sock = args[0]
     userName = args[1]
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = _psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     try:
         cursor.execute("SELECT totalpoints FROM Viewers WHERE name='" + userName.lower() + "';")
@@ -470,7 +470,7 @@ def clip(args):
     sock = args[0]
     additionalArgs = args[1:]
     userName = additionalArgs[0]
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = _psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor(cursor_factory=_dictCursor)
     cursor.execute("SELECT * FROM Clips;")
     clipList = cursor.fetchall()
@@ -527,7 +527,7 @@ def clip(args):
 def pay(args):
     sock = args[0]
     userName = args[1]
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = _psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     try:
         cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
@@ -570,7 +570,7 @@ def slot(args):
         if streamStatus is False:
             _chat(sock, "Sorry, " + userName + ", but you can't win anything off stream! Try using !next to see when you can next play with the slot machine!")
             return
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = _psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor()
     cursor.execute("SELECT points FROM Viewers WHERE name='" + userName.lower() + "';")
     currentPoints = int(cursor.fetchone()[0])
@@ -632,7 +632,7 @@ def slot(args):
 def leaderboard(args):
     sock = args[0]
     userName = args[1]
-    connection = psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
+    connection = _psycopg2.connect(database=_cfg.JOIN.lower(), user=_cfg.NICK.lower())
     cursor = connection.cursor(cursor_factory=_dictCursor)
     cursor.execute("SELECT * FROM Viewers WHERE name NOT IN (" + ', '.join([repr(x) for x in _cfg.skipViewers]) + ") ORDER BY totalpoints DESC LIMIT 5;")
     topRanked = cursor.fetchall()

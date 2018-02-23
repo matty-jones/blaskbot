@@ -275,8 +275,8 @@ async def next(context):
         if len(timeStrings) == 3:
             totalTime = timeStrings[0] + ", " + totalTime
         outputString += totalTime
-        if len(cfg.streamScheduleAdditional) > 0:
-            outputString += " " + cfg.streamScheduleAdditional
+        if cfg.streamScheduleAdditional is not None:
+            outputString += ". " + cfg.streamScheduleAdditional
         await client.say(outputString)
 
 
