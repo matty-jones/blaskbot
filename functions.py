@@ -67,14 +67,17 @@ def chat(sock, msg, sendType='bot'):
         sock -- The socket over which to send the message
         msg -- (str) The message to send
     '''
-    command = False
     if sendType == 'bot':
         msg = "/me : " + msg
     #printv(sendType + ": " + msg, 1)
     try:
         sock.send("PRIVMSG #{} :{}\r\n".format(cfg.JOIN, msg).encode('utf-8'))
-    except:
-        printv("ERROR: " + repr(sys.exc_info()[0]) + ", MESSAGE NOT SENT", 1)
+    except Exception as e:
+        import traceback
+        printv("ERROR: " + str(e) + ", MESSAGE NOT SENT", 1)
+        traceback.print_exception(*sys.exc_info())
+    finally:
+        return msg
 
 
 def ban(sock, user):
