@@ -24,9 +24,26 @@ from psycopg2.extras import DictCursor as _dictCursor
 import collections as _collections
 import numpy as _np
 
-BAD_ARG_RESPONSE = {
-    "roll": "I don't know what to roll! Try specifying a "
-            "die using something like: !roll 20 or !roll 2d6",
+MAX_DICE = 10
+MAX_DSIDES = 150
+
+RESPONSES = {
+    "roll": {
+        "error": {
+            "bad_args": "I don't know what to roll! Try specifying a "
+                        "die using something like: !roll 20 or !roll 2d6",
+            "too_many_dice": "Hey now, don't be rollin' more than {} of "
+                             "those!".format(MAX_DICE),
+            "too_many_dsides": "Hey now, a dice with {} sides is too round "
+                               "to get a good answer!".format(MAX_DSIDES),
+        },
+        "success": {
+            "roll": "I rolled {rolls} die with {dSides} sides "
+                    "and got {result}.",
+            "rolls": "I rolled {rolls} dice with {dSides} sides "
+                     "and got {result}. The dice add to {result_sum}.",
+        },
+    },
 }
 
 
@@ -68,14 +85,14 @@ def roll(args):
     try:
         rollArg = args[2].lower()
     except IndexError:
-        return _chat(sock, BAD_ARG_RESPONSE["roll"])
+        return _chat(sock, RESPONSES["roll"]["error"]["bad_args"])
 
     # parse rollArg to allow for a d, ie: 3d4 to roll 3 dice with 4 sides each
     rollList = rollArg.split('d')
     if len(rollList) == 1:  # There was no d in the rollArg
         rollList = [1] + rollList  # Make the list in the correct format, ie: [1, 4]
     if len(rollList) != 2:  # Correct format, ie [3, 4]
-        return _chat(sock, BAD_ARG_RESPONSE["roll"])
+        return _chat(sock, RESPONSES["roll"]["error"]["bad_args"])
 
     # get the int values for the roll
     try :
@@ -84,17 +101,23 @@ def roll(args):
         if rollList[0] == '':  # this means we get a d3
             rolls = 1
         else:
-            return _chat(sock, BAD_ARG_RESPONSE["roll"])
+            return _chat(sock, RESPONSES["roll"]["error"]["bad_args"])
 
     # get the int values for the sides
     try :
         dSides = int(rollList[1])
     except ValueError:
-        return _chat(sock, BAD_ARG_RESPONSE["roll"])
+        return _chat(sock, RESPONSES["roll"]["error"]["bad_args"])
 
-    # check for negetives and zeros
+    # check for negetives and zeros`
     if min([rolls, dSides]) <= 0:
-        return _chat(sock, BAD_ARG_RESPONSE["roll"])
+        return _chat(sock, RESPONSES["roll"]["error"]["bad_args"])
+    # check for too many sides (for to long of a response)
+    elif dSides >= MAX_DSIDES:
+        return _chat(sock, RESPONSES["roll"]["error"]["too_many_dsides"])
+    # check for too many dice (for to long of a response)
+    elif rolls >= MAX_DICE:
+        return _chat(sock, RESPONSES["roll"]["error"]["too_many_dice"])
 
     # Use a generator to get the list of rolls
     result = [_R.randint(1, dSides) for _ in range(rolls)]
@@ -102,18 +125,16 @@ def roll(args):
     # format the result to be a string
     result = str.join(', ', [str(_) for _ in result])
     # No one wants to say 1 dice
-    diceWord = 'die' if rolls == 1 else 'dice'
     fmt = {
         'rolls': rolls,
-        'diceWord': diceWord,
         'dSides': dSides,
         'result': result,
     }
-    response = ("I rolled {rolls} {diceWord} with {dSides} sides "
-                "and got {result}.").format(**fmt)
-    if rolls > 1:
-        response += " The dice add to {}.".format(result_sum)
-    return _chat(sock, response)
+    if rolls == 1:
+        return _chat(sock, RESPONSES["roll"]["success"]["roll"].format(**fmt))
+    else:
+        fmt['result_sum'] = result_sum
+        return _chat(sock, RESPONSES["roll"]["success"]["rolls"].format(**fmt))
 
 
 def buydrink(args):
