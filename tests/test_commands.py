@@ -39,8 +39,10 @@ class TestCommand(TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        cmdErr = commands.BAD_ARG_RESPONSE[self.command]
-        self.badResponse = "/me : {}".format(cmdErr)
+        cmdError = commands.RESPONSES[self.command]["error"]
+        cmdSuccess = commands.RESPONSES[self.command]["success"]
+        self.error = {key : "/me : {}".format(value) for key, value in cmdError.items()}
+        self.success = {key : "/me : {}".format(value) for key, value in cmdSuccess.items()}
 
     def cmdResponse(self, addArgs):
         addArgs = addArgs if isinstance(addArgs, list) else [addArgs]
@@ -48,17 +50,22 @@ class TestCommand(TestCase):
         cmd = getattr(commands, self.command)
         return cmd(self.args)
 
-    def shouldPass(self, addArgs, expect=None):
-        expect = expect if expect else self.badResponse
+    def shouldEqual(self, addArgs, expect):
+        response = self.cmdResponse(addArgs)
+        self.assertEqual(response,
+                         expect)
+
+    def shouldNotEqual(self, addArgs, expect):
         response = self.cmdResponse(addArgs)
         self.assertNotEqual(response,
                             expect)
 
-    def shouldFail(self, addArgs, expect=None):
-        expect = expect if expect else self.badResponse
+    def shouldNotFail(self, addArgs):
         response = self.cmdResponse(addArgs)
-        self.assertEqual(response,
-                         expect)
+        for err in self.error.values():
+            self.assertNotEqual(response,
+                                err)
+
 
     def setUp(self):
         self.args = [testSock, "test_user"]
@@ -72,68 +79,91 @@ class TestRoll(TestCommand):
 
     # edge cases
     def test_no_arg(self):
-        self.shouldFail("")
+        self.shouldEqual("", self.error['bad_args'])
 
     def test_zero(self):
-        self.shouldFail("0")
-        self.shouldFail("0d")
-        self.shouldFail("d0")
-        self.shouldFail("0d8")
-        self.shouldFail("3d0")
+        self.shouldEqual("0", self.error['bad_args'])
+        self.shouldEqual("0d", self.error['bad_args'])
+        self.shouldEqual("d0", self.error['bad_args'])
+        self.shouldEqual("0d8", self.error['bad_args'])
+        self.shouldEqual("3d0", self.error['bad_args'])
 
     def test_neg_num(self):
-        self.shouldFail("-3")
-        self.shouldFail("-3d")
-        self.shouldFail("-3d-8")
-        self.shouldFail("3d-8")
-        self.shouldFail("d-8")
+        self.shouldEqual("-3", self.error['bad_args'])
+        self.shouldEqual("-3d", self.error['bad_args'])
+        self.shouldEqual("-3d-8", self.error['bad_args'])
+        self.shouldEqual("3d-8", self.error['bad_args'])
+        self.shouldEqual("d-8", self.error['bad_args'])
+
+    # too large of rolls
+    def test_too_many_dice(self):
+        self.shouldEqual("{}d10".format(commands.MAX_DICE + 1), self.error['too_many_dice'])
+
+    def test_equal_too_many_dice(self):
+        self.shouldEqual("{}d10".format(commands.MAX_DICE), self.error['too_many_dice'])
+
+    def test_too_many_dsides(self):
+        self.shouldEqual("10d{}".format(commands.MAX_DSIDES + 1), self.error['too_many_dsides'])
+
+    def test_equal_too_many_dsides(self):
+        self.shouldEqual("10d{}".format(commands.MAX_DSIDES), self.error['too_many_dsides'])
+
+
+    def test_plural(self):
+        response = self.cmdResponse("2d10")
+        assert 'dice' in response
+        assert 'add' in response
+
+    def test_singular(self):
+        response = self.cmdResponse("d10")
+        assert 'die' in response
 
     # num
     def test_roll_num(self):
-        self.shouldPass("3")
+        self.shouldNotFail("3")
 
     def test_roll_num_d(self):
-        self.shouldFail("3d")
-        self.shouldFail("3D")
+        self.shouldEqual("3d", self.error['bad_args'])
+        self.shouldEqual("3D", self.error['bad_args'])
 
     def test_roll_num_d_num(self):
-        self.shouldPass("3d8")
-        self.shouldPass("3D8")
+        self.shouldNotFail("3d8")
+        self.shouldNotFail("3D8")
 
     def test_roll_num_d_char(self):
-        self.shouldFail("3da")
-        self.shouldFail("3Da")
+        self.shouldEqual("3da", self.error['bad_args'])
+        self.shouldEqual("3Da", self.error['bad_args'])
 
     # d
     def test_roll_d(self):
-        self.shouldFail("d")
-        self.shouldFail("D")
+        self.shouldEqual("d", self.error['bad_args'])
+        self.shouldEqual("D", self.error['bad_args'])
 
     def test_roll_d_num(self):
-        self.shouldPass("d8")
-        self.shouldPass("D8")
+        self.shouldNotFail("d8")
+        self.shouldNotFail("D8")
 
     def test_roll_d_char(self):
-        self.shouldFail("da")
-        self.shouldFail("Da")
+        self.shouldEqual("da", self.error['bad_args'])
+        self.shouldEqual("Da", self.error['bad_args'])
 
     # char
     def test_roll_char(self):
-        self.shouldFail("c")
-        self.shouldFail("C")
+        self.shouldEqual("c", self.error['bad_args'])
+        self.shouldEqual("C", self.error['bad_args'])
 
     def test_roll_chars(self):
-        self.shouldFail("copper")
-        self.shouldFail("Can")
+        self.shouldEqual("copper", self.error['bad_args'])
+        self.shouldEqual("Can", self.error['bad_args'])
 
     def test_roll_char_d(self):
-        self.shouldFail("cd")
-        self.shouldFail("cD")
+        self.shouldEqual("cd", self.error['bad_args'])
+        self.shouldEqual("cD", self.error['bad_args'])
 
     def test_roll_char_d_num(self):
-        self.shouldFail("cd8")
-        self.shouldFail("cD8")
+        self.shouldEqual("cd8", self.error['bad_args'])
+        self.shouldEqual("cD8", self.error['bad_args'])
 
     def test_roll_char_d_char(self):
-        self.shouldFail("cda")
-        self.shouldFail("cDa")
+        self.shouldEqual("cda", self.error['bad_args'])
+        self.shouldEqual("cDa", self.error['bad_args'])
