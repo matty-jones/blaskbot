@@ -113,10 +113,10 @@ def roll(args):
     if min([rolls, dSides]) <= 0:
         return _chat(sock, _RESPONSES["roll"]["error"]["bad_args"])
     # check for too many sides (for to long of a response)
-    elif dSides >= _MAX_DSIDES:
+    elif dSides > _MAX_DSIDES:
         return _chat(sock, _RESPONSES["roll"]["error"]["too_many_dsides"])
     # check for too many dice (for to long of a response)
-    elif rolls >= _MAX_DICE:
+    elif rolls > _MAX_DICE:
         return _chat(sock, _RESPONSES["roll"]["error"]["too_many_dice"])
 
     # Use a generator to get the list of rolls
