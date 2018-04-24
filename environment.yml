@@ -10,3 +10,4 @@ dependencies:
   - requests
   - psycopg2
   - numpy
+  - flask
