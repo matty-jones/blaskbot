@@ -3,12 +3,33 @@
 
 <head>
     <title>Blaskbot Alerts</title>
+    <link rel="stylesheet" href={{url_for('static', filename='styles.css')}}>
+    <script>
+        function videoEnded() {
+            document.getElementByID("video").style.display="none";
+        }
+    </script>
+
 </head>
 
-<body bgcolor="#000000">
-    <video width="1280" height="720" autoplay>
-        <source src={{url_for('static', filename='bits.mp4')}} type='video/mp4'>
-    </video>
+
+<body bgcolor="#FFFFFF">
+    <table width=1280>
+        <tr>
+            <td>
+                <div id="video_frame">
+                    <video id="video" width="1280" height="720" autoplay onended="videoEnded()">
+                        <source src={{url_for('static', filename='bits.mp4')}} type='video/mp4'>
+                    </video>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <h1>Lorum Ipsum Big Black Moon Dog Jumped Lazy Fox Thing</h1>
+            </td>
+        </tr>
+    </table>
 </body>
 
 </html>

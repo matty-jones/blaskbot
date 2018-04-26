@@ -1,0 +1,22 @@
+body {
+    background-color: #FFFFFF
+}
+h1 {
+    color: white;
+    font-family: 'futura';
+    font-size: 300%;
+    -webkit-text-stroke-width: 3px;
+    -webkit-text-stroke-color: black
+}
+p {
+    color: red;
+}
+table, th, td {
+    border: 2px solid black;
+    text-align: center;
+}
+
+@font-face {
+    font-family: futura;
+    src: url('Futura.ttf')
+}
