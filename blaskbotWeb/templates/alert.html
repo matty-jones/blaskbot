@@ -4,32 +4,35 @@
 <head>
     <title>Blaskbot Alerts</title>
     <link rel="stylesheet" href={{url_for('static', filename='styles.css')}}>
+</head>
+
+<body bgcolor="#FFFFFF">
+    <div id="alert_table">
+        <table width=1280>
+            <tr>
+                <td>
+                    <video id="alert_video" width="1280" height="720" autoplay>
+                      <source src={{url_for('static', filename='bits.mp4')}} type="video/mp4">
+                    </video>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <h1>Lorum Ipsum Big Black Moon Dog Jumped Lazy Fox Thing Or W/E long long long wobbey beans testicular arrangement with the battle royale in star galactica</h1>
+                </td>
+            </tr>
+        </table>
+    </div>
+
     <script>
-        function videoEnded() {
-            document.getElementByID("video").style.display="none";
+         document.getElementById('alert_video').addEventListener('ended',myHandler,false);
+        function myHandler(e) {
+            if(!e) { e = window.event; }
+            // What you want to do after the event
+            document.getElementById('alert_table').style.display="none";
         }
     </script>
 
-</head>
-
-
-<body bgcolor="#FFFFFF">
-    <table width=1280>
-        <tr>
-            <td>
-                <div id="video_frame">
-                    <video id="video" width="1280" height="720" autoplay onended="videoEnded()">
-                        <source src={{url_for('static', filename='bits.mp4')}} type='video/mp4'>
-                    </video>
-                </div>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <h1>Lorum Ipsum Big Black Moon Dog Jumped Lazy Fox Thing</h1>
-            </td>
-        </tr>
-    </table>
 </body>
 
 </html>
