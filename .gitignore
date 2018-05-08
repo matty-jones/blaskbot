@@ -9,6 +9,7 @@ configurator.py
 *.swo
 *.pem
 *.log
+old_*
 Images/*
 testing/
 voice/
