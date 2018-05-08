@@ -4,8 +4,15 @@ body {
 h1 {
     color: white;
     font-family: 'futura';
-    font-size: 300%;
+    font-size: 400%;
     -webkit-text-stroke-width: 3px;
+    -webkit-text-stroke-color: black
+}
+h2 {
+    color: white;
+    font-family: 'futura';
+    font-size: 200%;
+    -webkit-text-stroke-width: 2px;
     -webkit-text-stroke-color: black
 }
 p {
@@ -13,10 +20,14 @@ p {
 }
 table, th, td {
     border: 2px solid black;
+    border-collapse: collapse;
     text-align: center;
+    vertical-align: center;
+    padding: 0px;
+    height: 10px;
 }
 
 @font-face {
     font-family: futura;
-    src: url('Futura.ttf')
+    src: url('./static/Futura.ttf')
 }
