@@ -2,6 +2,7 @@ import cfg
 import discord
 from discord.ext import commands
 import random as R
+import time as T
 import psycopg2
 import collections
 from psycopg2.extras import DictCursor as dictCursor
@@ -288,13 +289,11 @@ async def next(context):
 
 @client.event
 async def on_ready():
-    await client.change_presence(game=discord.Game(name="with Blasky's stream!"))
+    await client.change_presence(game=discord.Game(name="Half Life 3 Alpha"))
 
 
 @client.event
 async def on_member_join(member):
-    print("New member joined: ", member)
-    print("DEBUG: ", dir(member))
     await client.send_message(discord.Object(id='311591108968841238'), "Welcome to the Blaskatronic TV Discord, " + member.mention + "!")
 
 
@@ -304,4 +303,3 @@ def execute():
 
 if __name__ == "__main__":
     client.run(cfg.DISCORDPASS)
-
