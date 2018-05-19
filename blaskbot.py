@@ -32,7 +32,7 @@ from multiprocessing import Process
 def main():
     ''' The bot's main loop '''
     botComm = functions.getSocket(cfg.NICK, cfg.PASS, cfg.JOIN)
-    hostComm = functions.getSocket(cfg.JOIN, cfg.HOSTPASS, cfg.JOIN)
+    #hostComm = functions.getSocket(cfg.JOIN, cfg.HOSTPASS, cfg.JOIN)
 
     CHAT_MSG = re.compile(r"^:\w+!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :")
     #functions.chat(sock, "Booting up...")
@@ -47,8 +47,8 @@ def main():
                             daemon=True)
     subscribeTimer = Process(target=functions.timer, args=('subscribe', 3600,\
                             [botComm, cfg.JOIN.lower()]), daemon=True)
-    typeAsHost = Process(target=functions.hostChat, args=([hostComm,\
-                            os.fdopen(os.dup(sys.stdin.fileno()))]), daemon=True)
+    #typeAsHost = Process(target=functions.hostChat, args=([hostComm,\
+    #                        os.fdopen(os.dup(sys.stdin.fileno()))]), daemon=True)
     thankLatest = Process(target=functions.thankLatest, args=([botComm]),\
                          daemon=True)
     # ...and start them
@@ -68,9 +68,9 @@ def main():
                 printv("STREAM INACTIVE!", 1)
                 functions.setAllToLurker()
                 previousStreamState = currentStreamState
-        hostResponse = hostComm.recv(1024).decode("utf-8")
-        if hostResponse == "PING :tmi.twitch.tv\r\n":
-            hostComm.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
+        #hostResponse = hostComm.recv(1024).decode("utf-8")
+        #if hostResponse == "PING :tmi.twitch.tv\r\n":
+        #    hostComm.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
         response = botComm.recv(1024).decode("utf-8")
         if response == "PING :tmi.twitch.tv\r\n":
             botComm.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
