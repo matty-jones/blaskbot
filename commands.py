@@ -10,6 +10,7 @@ from functions import isOp as _isOp
 from functions import printv as _printv
 from functions import getViewerList as _getViewerList
 from functions import streamIsUp as _streamIsUp
+from functions import streamLiveTime as _streamLiveTime
 import sys as _sys
 import os as _os
 import cfg as _cfg
@@ -76,6 +77,15 @@ def dece(args):
 def discord(args):
     sock = args[0]
     _chat(sock, "Chat to us on Discord at: www.discord.me/blaskatronic")
+
+
+def live(args):
+    sock = args[0]
+    timeLive = _streamTimeLive()
+    if timeLive:
+        _chat(sock, "Blaskatronic has been live for %s" % timeLive)
+    else:
+        _chat(sock, "Blaskatronic is not currently live.")
 
 
 def roll(args):

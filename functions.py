@@ -9,6 +9,7 @@ BEEP BOOP!
 import cfg
 import requests
 import time as T
+from datetime import datetime
 import os
 import sys
 import socket
@@ -319,16 +320,30 @@ def isOp(user):
     return user in cfg.opList
 
 
-def streamIsUp():
+def streamData():
     streamData = queryAPI("https://api.twitch.tv/kraken/streams/" + cfg.JOIN)
     if streamData is None:
         return None
-    try:
-        if not streamData['stream']:
-            return False
-    except:
-        return False
-    return True
+    if streamData['stream'] is None:
+        # stream is not live
+        return None
+    else:
+        return steamData
+
+
+def steamLiveTime():
+    streamData = streamData()
+    if streamData:
+        createdAt = streamData['stream']['created_at']
+        createdAt = datetime.strptime(createdAt, '%Y-%m-%dT%H:%M:%SZ')
+        delta = datetime.now() - createdAt
+        return str(delta)
+    else:
+        return None
+
+
+def streamIsUp():
+    return True if streamData() else False
 
 
 def setStreamParams():
